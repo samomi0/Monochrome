@@ -630,7 +630,7 @@ body {
     margin: 0 auto 60px auto;
     max-width: 95%;
     border-radius: 16px;
-    padding: 80px 40px 120px 40px;
+    padding: 60px 40px 60px 40px;
     overflow-x: auto;
     overflow-y: clip;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
@@ -660,7 +660,7 @@ body {
 .timeline {
     position: relative;
     min-height: 900px;
-    padding: 150px 0;
+    padding: 400px 0;
     margin: 0 auto;
     transition: all 0.3s ease;
 }
@@ -677,119 +677,125 @@ body {
 }
 
 .timeline-axis {
-    position: absolute;
-    top: 50%;
-    left: 0;
-    transform: translateY(-50%);
+    position: relative;
+    display: block;
+    margin: 0 auto;
     transition: all 0.3s ease;
 }
 
 /* 垂直时间轴主线 */
 .timeline.vertical .timeline-axis {
-    top: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    position: absolute;
+    position: relative;
+    display: block;
+    margin: 0 auto;
 }
 
 /* 垂直轴特殊样式 */
 .timeline-axis.vertical-axis {
-    left: 50% !important;
-    top: 0 !important;
-    transform: translateX(-50%) !important;
+    position: relative;
+    display: block;
+    margin: 0 auto;
 }
 
 /* ===== 事件节点 ===== */
 .event-node {
     position: absolute;
-    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     z-index: 1;
     transition: z-index 0s;
 }
 
 /* 垂直模式下的事件节点 */
 .event-node.vertical-mode {
-    transform: translateY(-50%);
-    display: flex;
     flex-direction: row;
     align-items: center;
 }
 
 /* 鼠标悬停时置顶 */
 .event-node:hover {
-    z-index: 1002; /* 提升到最高层，确保图片不被遮挡 */
+    z-index: 1002;
 }
 
-/* 时间轴上方的事件 */
+/* 时间轴上方的事件 - dot对齐时间轴，卡片在上方 */
 .event-node.above-line {
-    top: 50%;
-    transform: translateY(-100%);
+    /* timeline padding-top: 400px, SVG 内线条在 y=60 */
+    /* 所以时间轴线的实际位置是 400 + 60 = 460px */
+    top: 460px;
+    /* dot 中心应该在线上，dot 总高度 22px(16+3*2)，中心在 11px */
+    /* 整个节点向上移动自身高度，再向下移动 11px 让 dot 中心对齐 */
+    transform: translate(-50%, calc(-100% + 11px));
 }
 
-/* 垂直模式下的上方事件（左侧） */
+/* 垂直模式下的上方事件（左侧） - dot对齐时间轴，卡片在左侧 */
 .event-node.vertical-mode.above-line {
+    /* SVG 通过 margin: 0 auto 居中，宽 120px，线在 SVG 中心 x=60 */
+    /* 所以 dot 应该对齐容器的 50% 位置 */
     left: 50%;
-    transform: translateX(-100%);
+    top: auto;
+    /* dot 在右侧，卡片在左侧(row-reverse)，整体向左移动到让 dot 对齐中心 */
+    /* dot 宽 22px，中心在 11px，所以向左移整个节点宽度，再向右移 11px */
+    transform: translate(calc(-100% + 11px), -50%);
     flex-direction: row-reverse;
 }
 
 .event-node.above-line .event-card {
-    margin-bottom: 0;
-    margin-top: 0;
+    order: -1;
+    margin-bottom: 60px;
 }
 
 .event-node.above-line .event-dot {
-    order: 2;
-    position: relative;
-    /* margin-top 由动态样式控制 */
+    order: 1;
 }
 
 /* 垂直模式下的上方事件点 */
 .event-node.vertical-mode.above-line .event-dot {
-    order: 0;
-    margin-left: 24px;
-    margin-top: 0;
+    order: 1;
 }
 
-/* 时间轴下方的事件 */
-.event-node.below-line {
-    top: 50%;
-    transform: translateY(0);
-}
-
-/* 垂直模式下的下方事件（右侧） */
-.event-node.vertical-mode.below-line {
-    left: 50%;
-    transform: translateX(0);
-    flex-direction: row;
-}
-
-.event-node.below-line .event-card {
-    margin-top: 0;
+/* 垂直模式下上方卡片 */
+.event-node.vertical-mode.above-line .event-card {
+    order: -1;
+    margin-right: 40px;
     margin-bottom: 0;
 }
 
+/* 时间轴下方的事件 - dot对齐时间轴，卡片在下方 */
+.event-node.below-line {
+    /* timeline padding-top: 400px + SVG 内 y=60 = 460px */
+    top: 460px;
+    /* dot 在上，向上偏移 11px 让 dot 中心对齐线 */
+    transform: translate(-50%, -11px);
+}
+
+/* 垂直模式下的下方事件（右侧） - dot对齐时间轴，卡片在右侧 */
+.event-node.vertical-mode.below-line {
+    /* SVG 居中，从中心点对齐 */
+    left: 50%;
+    top: auto;
+    /* dot 在左侧，向左偏移 11px(dot 半径) */
+    transform: translate(-11px, -50%);
+}
+
+.event-node.below-line .event-card {
+    margin-top: 60px;
+}
+
 .event-node.below-line .event-dot {
-    position: relative;
-    /* margin-bottom 由动态样式控制 */
+    order: 0;
 }
 
 /* 垂直模式下的下方事件点 */
 .event-node.vertical-mode.below-line .event-dot {
-    margin-right: 24px;
-    margin-bottom: 0;
+    order: 0;
 }
 
-.event-node {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-/* 垂直模式下的事件节点重置为行方向 */
-.event-node.vertical-mode {
-    flex-direction: row;
-    align-items: center;
+/* 垂直模式下下方卡片 */
+.event-node.vertical-mode.below-line .event-card {
+    order: 1;
+    margin-left: 40px;
+    margin-top: 0;
 }
 
 .event-dot {
@@ -803,6 +809,7 @@ body {
     transition: all 0.3s ease;
     position: relative;
     z-index: 3;
+    flex-shrink: 0;
 }
 
 .event-dot::before {
@@ -813,6 +820,14 @@ body {
     transform: scale(1.4);
     border-color: #d4a5a5;
     box-shadow: 0 4px 16px rgba(212, 165, 165, 0.4);
+}
+
+/* 当卡片悬停时，圆点也高亮显示 */
+.event-node:hover .event-dot {
+    transform: scale(1.4);
+    border-color: #d4a5a5;
+    box-shadow: 0 4px 16px rgba(212, 165, 165, 0.4);
+    background: linear-gradient(135deg, #ffffff, #ffe8e8);
 }
 
 /* ===== 事件卡片 ===== */
@@ -1250,4 +1265,78 @@ body {
 .footer-author,
 .footer-year {
     font-weight: 300;
+}
+
+/* ===== 缩略图滚动栏 ===== */
+.minimap-scrollbar {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 1200px;
+    height: 50px;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 12px;
+    box-shadow: 
+        0 4px 16px rgba(0, 0, 0, 0.08),
+        0 0 0 1px rgba(0, 0, 0, 0.06);
+    backdrop-filter: blur(10px);
+    z-index: 1000;
+    padding: 8px;
+    transition: all 0.3s ease;
+}
+
+.minimap-scrollbar:hover {
+    box-shadow: 
+        0 6px 24px rgba(0, 0, 0, 0.12),
+        0 0 0 1px rgba(159, 168, 163, 0.3);
+}
+
+.minimap-track {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #f8f7f6 0%, #f2f0ee 100%);
+    border-radius: 8px;
+    overflow: hidden;
+    cursor: pointer;
+}
+
+.minimap-item {
+    /* 所有样式由 JavaScript 内联控制，这里只保留基本属性 */
+    transition: all 0.2s ease;
+}
+
+.minimap-item:hover {
+    opacity: 1;
+    transform: scaleX(1.3) scaleY(1.02);
+    filter: brightness(1.1);
+}
+
+.minimap-viewport {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    background: rgba(159, 168, 163, 0.15);
+    border: 2px solid rgba(159, 168, 163, 0.5);
+    border-radius: 4px;
+    cursor: grab;
+    transition: background 0.2s ease, border-color 0.2s ease;
+    box-shadow: 
+        inset 0 1px 3px rgba(255, 255, 255, 0.5),
+        0 2px 8px rgba(0, 0, 0, 0.1);
+    z-index: 10;
+    pointer-events: auto;
+}
+
+.minimap-viewport:hover {
+    background: rgba(159, 168, 163, 0.25);
+    border-color: rgba(159, 168, 163, 0.7);
+}
+
+.minimap-viewport:active {
+    cursor: grabbing;
+    background: rgba(159, 168, 163, 0.35);
+    border-color: var(--primary);
 }

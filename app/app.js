@@ -35,10 +35,58 @@ createApp({
                 image: ''
             },
             newEventTagInput: '',
-            newTagColor: '#9fa8a3' // 新标签的颜色
+            newTagColor: '#9fa8a3', // 新标签的颜色
+            // 用于存储事件监听器引用，便于清理
+            globalClickListener: null,
+            wheelListener: null,
+            // 缩略图滚动栏
+            minimap: {
+                isDragging: false,
+                viewportWidth: 0,
+                scrollRatio: 0
+            }
         };
     },
     computed: {
+        // 缓存：排序后的有效日期数组
+        sortedValidDates() {
+            if (this.events.length === 0) {
+                return [];
+            }
+            return this.events
+                .map(e => {
+                    const date = new Date(e.date);
+                    return isNaN(date.getTime()) ? null : date;
+                })
+                .filter(date => date !== null)
+                .sort((a, b) => a - b);
+        },
+        // 缓存：起始和结束日期
+        timelineRange() {
+            const dates = this.sortedValidDates;
+            if (dates.length === 0) {
+                const now = new Date();
+                return { 
+                    start: new Date(now.getFullYear(), now.getMonth(), 1),
+                    end: new Date(now.getFullYear(), now.getMonth(), 1)
+                };
+            }
+            const start = dates[0];
+            const end = dates[dates.length - 1];
+            return {
+                start: new Date(start.getFullYear(), start.getMonth(), 1),
+                end: new Date(end.getFullYear(), end.getMonth(), 1)
+            };
+        },
+        // 缓存：总月份数
+        totalMonths() {
+            const { start, end } = this.timelineRange;
+            return Math.max(
+                (end.getFullYear() - start.getFullYear()) * 12 + 
+                (end.getMonth() - start.getMonth()) + 1,
+                1
+            );
+        },
         // 所有唯一的标签
         allTags() {
             const tags = new Set();
@@ -77,13 +125,14 @@ createApp({
         },
         // 计算时间范围
         dateRange() {
-            if (this.events.length === 0) {
-                return { min: new Date(), max: new Date() };
+            const dates = this.sortedValidDates;
+            if (dates.length === 0) {
+                const now = new Date();
+                return { min: now, max: now };
             }
-            const dates = this.events.map(e => new Date(e.date));
             return {
-                min: new Date(Math.min(...dates)),
-                max: new Date(Math.max(...dates))
+                min: dates[0],
+                max: dates[dates.length - 1]
             };
         },
         // 计算总天数
@@ -94,83 +143,60 @@ createApp({
             // 增加左右边距，确保时间轴不会太紧凑
             return Math.max(diffDays + 120, 365); // 至少显示一年，左右各60天边距
         },
-        // 计算时间轴总宽度（基于压缩后的位置）
+        // 计算时间轴总宽度
         timelineWidth() {
-            if (this.events.length === 0) {
+            if (this.sortedValidDates.length === 0) {
                 return 2000;
             }
-            // 获取最后一个事件的位置，然后加上右边距
-            const lastEventDate = this.events[this.events.length - 1].date;
-            const lastPosition = this.getEventPosition(lastEventDate);
-            return lastPosition + 800 + 400; // 添加右边距和左边距补偿
+            // 左边距 + 每月间距 * 月份数 + 右边距
+            return 400 + (this.totalMonths * 200 * this.zoomLevel) + 400;
         },
         // 垂直时间轴高度
         timelineHeight() {
-            if (this.events.length === 0) {
+            if (this.sortedValidDates.length === 0) {
                 return 2000;
             }
-            // 垂直模式下，使用与水平模式相同的计算逻辑
-            const lastEventDate = this.events[this.events.length - 1].date;
-            const lastPosition = this.getEventPosition(lastEventDate);
-            return lastPosition + 400; // 添加底部边距
+            // 顶部边距 + 每月间距 * 月份数 + 底部边距
+            return 80 + (this.totalMonths * 200 * this.zoomLevel) + 100;
         },
         // 当前每天的像素数
         pixelsPerDay() {
             return this.basePixelsPerDay * this.zoomLevel;
         },
-        // 计算刻度（基于实际事件位置 + 间隙中间刻度）
+        // 计算刻度（按月生成）
         ticks() {
-            if (this.events.length === 0) {
+            if (this.sortedValidDates.length === 0) {
                 return [];
             }
             
             const ticks = [];
-            const allDates = this.events.map(e => new Date(e.date)).sort((a, b) => a - b);
-            const addedMonths = new Set(); // 记录已添加的年月，避免重复
+            const { start, end } = this.timelineRange;
             
-            // 为每个事件添加刻度（只在该月首次出现时显示）
-            this.events.forEach(event => {
-                const eventDate = new Date(event.date);
-                const yearMonth = `${eventDate.getFullYear()}-${String(eventDate.getMonth() + 1).padStart(2, '0')}`;
-                
-                // 只有该月份首次出现时才添加刻度
-                if (!addedMonths.has(yearMonth)) {
-                    addedMonths.add(yearMonth);
-                    ticks.push({
-                        date: eventDate,
-                        x: this.getEventPosition(event.date),
-                        label: yearMonth,
-                        isEvent: true,
-                        isTimeJump: false
-                    });
-                }
-            });
+            // 从起始月份开始，每月生成一个刻度
+            let currentMonth = new Date(start);
+            const endMonth = new Date(end);
             
-            // 在事件间隙添加折跃标记
-            for (let i = 0; i < allDates.length - 1; i++) {
-                const currentDate = allDates[i];
-                const nextDate = allDates[i + 1];
-                const daysDiff = (nextDate - currentDate) / (1000 * 60 * 60 * 24);
+            while (currentMonth <= endMonth) {
+                const yearMonth = `${currentMonth.getFullYear()}-${String(currentMonth.getMonth() + 1).padStart(2, '0')}`;
+                const monthPosition = this.getMonthPosition(currentMonth);
                 
-                // 如果间隙超过180天，添加折跃标记
-                if (daysDiff > 180) {
-                    const currentPos = this.getEventPosition(this.events.find(e => 
-                        new Date(e.date).getTime() === currentDate.getTime()).date);
-                    const nextPos = this.getEventPosition(this.events.find(e => 
-                        new Date(e.date).getTime() === nextDate.getTime()).date);
-                    
-                    const midPos = (currentPos + nextPos) / 2;
-                    const jumpDays = Math.floor(daysDiff);
-                    
-                    ticks.push({
-                        date: new Date((currentDate.getTime() + nextDate.getTime()) / 2),
-                        x: midPos,
-                        label: `⚡ ${jumpDays}天`,
-                        isEvent: false,
-                        isTimeJump: true,
-                        jumpDays: jumpDays
-                    });
-                }
+                // 检查该月是否有事件
+                const hasEvent = this.events.some(event => {
+                    const eventDate = new Date(event.date);
+                    return eventDate.getFullYear() === currentMonth.getFullYear() && 
+                           eventDate.getMonth() === currentMonth.getMonth();
+                });
+                
+                ticks.push({
+                    date: new Date(currentMonth),
+                    x: monthPosition,
+                    label: yearMonth,
+                    isEvent: hasEvent,
+                    isTimeJump: false
+                });
+                
+                // 移动到下个月
+                currentMonth = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1);
             }
             
             return ticks.sort((a, b) => a.x - b.x);
@@ -218,69 +244,118 @@ createApp({
                 }
                 
                 // 加载事件数据
-                if (data.events) {
-                    this.events = data.events.sort((a, b) => 
+                if (data.events && Array.isArray(data.events)) {
+                    // 验证并过滤无效日期的事件
+                    const validEvents = data.events.filter(event => {
+                        if (!event.date || !event.title) {
+                            console.warn('跳过无效事件（缺少日期或标题）:', event);
+                            return false;
+                        }
+                        const date = new Date(event.date);
+                        if (isNaN(date.getTime())) {
+                            console.warn('跳过无效日期的事件:', event.date);
+                            return false;
+                        }
+                        return true;
+                    });
+                    
+                    this.events = validEvents.sort((a, b) => 
                         new Date(a.date) - new Date(b.date)
                     );
+                    
+                    const skipped = data.events.length - validEvents.length;
+                    if (skipped > 0) {
+                        console.warn(`已跳过 ${skipped} 个无效事件`);
+                    }
+                } else {
+                    console.warn('未找到有效的事件数据');
+                    this.events = [];
                 }
             } catch (error) {
                 console.error('加载数据失败:', error);
-                alert('加载数据失败，请确保data.yaml文件存在且格式正确');
+                // 提供降级方案
+                this.events = [];
+                alert('加载数据失败，请确保data.yaml文件存在且格式正确。已加载空时间轴。');
             }
         },
-        // 计算事件在时间轴上的位置（使用压缩算法）
+        // 计算月份刻度位置
+        getMonthPosition(date) {
+            const targetDate = new Date(date);
+            // 验证日期有效性
+            if (isNaN(targetDate.getTime())) {
+                console.warn('无效日期:', date);
+                return 400;
+            }
+            
+            const targetMonth = new Date(targetDate.getFullYear(), targetDate.getMonth(), 1);
+            
+            if (this.sortedValidDates.length === 0) {
+                return 400;
+            }
+            
+            const { start } = this.timelineRange;
+            
+            // 左边距
+            const leftMargin = 400;
+            // 每个月的基础间距
+            const monthSpacing = 200 * this.zoomLevel;
+            
+            // 计算目标月份与起始月份的差值
+            const monthsDiff = (targetMonth.getFullYear() - start.getFullYear()) * 12 + 
+                              (targetMonth.getMonth() - start.getMonth());
+
+            console.log(`计算月份位置 - 日期: ${date}, 月份差值: ${monthsDiff}, 位置: ${leftMargin + (monthsDiff * monthSpacing)}`);
+            
+            return leftMargin + (monthsDiff * monthSpacing);
+        },
+        // 计算事件在时间轴上的位置（对齐到所在月份的刻度）
         getEventPosition(date) {
             const eventDate = new Date(date);
-            const startDate = new Date(this.dateRange.min);
-            startDate.setDate(startDate.getDate() - 60);
-            
-            // 获取所有事件日期并排序
-            const allDates = this.events.map(e => new Date(e.date)).sort((a, b) => a - b);
-            
-            // 左边距起始位置
-            const leftMargin = 400;
-            let position = leftMargin;
-            const minGap = 150; // 最小间距（像素）
-            const maxGap = 500; // 最大间距（像素）
-            const normalDaysPerPixel = this.basePixelsPerDay * this.zoomLevel;
-            const compressionThreshold = 90; // 超过90天的间隔开始压缩
-            
-            // 遍历所有事件，计算压缩后的位置
-            for (let i = 0; i < allDates.length; i++) {
-                if (eventDate.getTime() === allDates[i].getTime()) {
-                    return position;
-                }
-                
-                // 计算到下一个事件的天数
-                if (i < allDates.length - 1) {
-                    const currentDate = allDates[i];
-                    const nextDate = allDates[i + 1];
-                    const daysDiff = (nextDate - currentDate) / (1000 * 60 * 60 * 24);
-                    
-                    let segmentWidth;
-                    if (daysDiff <= compressionThreshold) {
-                        // 正常间距
-                        segmentWidth = daysDiff * normalDaysPerPixel;
-                    } else {
-                        // 压缩间距：保持最小间距 + 对数缩放
-                        const excessDays = daysDiff - compressionThreshold;
-                        const compressedExtra = Math.log(excessDays + 1) * 50 * this.zoomLevel;
-                        segmentWidth = compressionThreshold * normalDaysPerPixel + compressedExtra;
-                    }
-                    
-                    // 限制在最小和最大间距之间
-                    segmentWidth = Math.max(minGap, Math.min(maxGap * this.zoomLevel, segmentWidth));
-                    position += segmentWidth;
-                }
+            // 验证日期有效性
+            if (isNaN(eventDate.getTime())) {
+                console.warn('无效日期:', date);
+                return 400;
             }
             
-            // 如果是起始日期前的位置
-            if (eventDate < allDates[0]) {
-                const daysDiff = (allDates[0] - eventDate) / (1000 * 60 * 60 * 24);
-                return leftMargin - (daysDiff * normalDaysPerPixel);
+            const basePosition = this.getMonthPosition(eventDate);
+            
+            // 计算月内偏移量
+            const year = eventDate.getFullYear();
+            const month = eventDate.getMonth();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            const dayOfMonth = eventDate.getDate();
+            
+            // 边界检查
+            if (dayOfMonth < 1 || dayOfMonth > daysInMonth) {
+                console.warn('日期超出月份范围:', date);
+                return basePosition;
             }
             
-            return position;
+            // 月份间距（考虑缩放）
+            const monthSpacing = 200 * this.zoomLevel;
+            
+            // 计算日期在月内的相对位置
+            // 1号对齐刻度起点，最后一天在月末（不超出到下月）
+            // 使用80%的月份间距来放置事件，避免与下月刻度重叠
+            let dayRatio;
+            if (daysInMonth === 1 || dayOfMonth === 1) {
+                dayRatio = 0;
+            } else {
+                dayRatio = (dayOfMonth - 1) / (daysInMonth - 1);
+            }
+            
+            // 最大偏移范围：月份间距的80%
+            const maxOffsetRange = monthSpacing * 0.8;
+            
+            // 计算偏移（相对于月份刻度起点）
+            // 1号: offset = 0（刻度起点）
+            // 最后一天: offset = maxOffsetRange（月末，不超出）
+            const offset = dayRatio * maxOffsetRange;
+
+            // 输出日志
+            console.log(`计算事件位置 - 日期: ${date}, 月份起点: ${basePosition}, 天数: ${dayOfMonth}/${daysInMonth}, 偏移: ${offset}`);
+            
+            return basePosition + offset;
         },
         // 格式化日期显示
         formatDate(date) {
@@ -289,33 +364,46 @@ createApp({
         },
         // 计算圆点的垂直偏移（根据与相邻事件的天数间隔）
         getDotOffset(eventDate, isAboveLine) {
-            // 找到当前事件在原始数据中的索引
-            const originalIndex = this.events.findIndex(e => e.date === eventDate);
-            if (originalIndex === -1) return 50; // 默认偏移增加到50px
-            
-            const allDates = this.events.map(e => new Date(e.date));
             const currentDate = new Date(eventDate);
+            // 验证日期
+            if (isNaN(currentDate.getTime())) {
+                return 50;
+            }
+            
+            // 使用缓存的排序日期
+            const dates = this.sortedValidDates;
+            if (dates.length === 0) return 50;
+            
+            // 找到当前日期在排序数组中的位置
+            const currentIndex = dates.findIndex(d => 
+                d.getTime() === currentDate.getTime()
+            );
+            
+            if (currentIndex === -1) return 50;
             
             let daysDiff = 0;
+            const MS_PER_DAY = 1000 * 60 * 60 * 24;
             
             // 上方事件：计算与前一个事件的间隔
-            if (isAboveLine) {
-                if (originalIndex > 0) {
-                    const prevDate = allDates[originalIndex - 1];
-                    daysDiff = (currentDate - prevDate) / (1000 * 60 * 60 * 24);
-                }
+            if (isAboveLine && currentIndex > 0) {
+                daysDiff = (currentDate - dates[currentIndex - 1]) / MS_PER_DAY;
             }
             // 下方事件：计算与后一个事件的间隔
-            else {
-                if (originalIndex < allDates.length - 1) {
-                    const nextDate = allDates[originalIndex + 1];
-                    daysDiff = (nextDate - currentDate) / (1000 * 60 * 60 * 24);
-                }
+            else if (!isAboveLine && currentIndex < dates.length - 1) {
+                daysDiff = (dates[currentIndex + 1] - currentDate) / MS_PER_DAY;
             }
             
+            // 检查同月事件数量
+            const sameMonthCount = dates.filter(d => 
+                d.getFullYear() === currentDate.getFullYear() && 
+                d.getMonth() === currentDate.getMonth()
+            ).length;
+            
+            const baseOffset = sameMonthCount > 1 ? 30 : 50;
+            
             // 根据天数间隔计算偏移：间隔越大，离轴越远
-            // 基础偏移50px，每30天增加12px，最多150px
-            const offset = Math.min(50 + Math.floor(daysDiff / 30) * 12, 150);
+            // 每30天增加10px，最多120px
+            const offset = Math.min(baseOffset + Math.floor(daysDiff / 30) * 10, 120);
             return offset;
         },
         // 格式化刻度标签
@@ -459,7 +547,11 @@ createApp({
         // 处理图片加载错误
         handleImageError(event) {
             console.error('图片加载失败:', event.target.src);
-            event.target.style.display = 'none';
+            // 显示占位图而不是隐藏
+            event.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="100" height="100"%3E%3Crect fill="%23ddd" width="100" height="100"/%3E%3Ctext x="50%25" y="50%25" text-anchor="middle" dy=".3em" fill="%23999" font-size="14"%3E图片加载失败%3C/text%3E%3C/svg%3E';
+            event.target.style.opacity = '0.5';
+            // 防止无限循环
+            event.target.onerror = null;
         },
         // 添加标签到新事件
         addTagToNewEvent() {
@@ -498,6 +590,13 @@ createApp({
             // 验证必填字段
             if (!this.newEvent.date || !this.newEvent.title) {
                 alert('请填写日期和标题');
+                return;
+            }
+            
+            // 验证日期格式
+            const testDate = new Date(this.newEvent.date);
+            if (isNaN(testDate.getTime())) {
+                alert('日期格式无效，请使用 YYYY-MM-DD 格式');
                 return;
             }
             
@@ -619,7 +718,76 @@ createApp({
                 const walk = (x - startX) * 2; // 拖动速度
                 container.scrollLeft = scrollLeft - walk;
             });
-        }
+        },
+        // 缩略图滚动栏相关方法
+        updateMinimapViewport() {
+            if (this.timelineOrientation !== 'horizontal') return;
+            
+            const container = this.$refs.timelineContainer;
+            if (!container) return;
+            
+            const scrollWidth = container.scrollWidth;
+            const clientWidth = container.clientWidth;
+            const scrollLeft = container.scrollLeft;
+            
+            this.minimap.viewportWidth = (clientWidth / scrollWidth) * 100;
+            this.minimap.scrollRatio = scrollLeft / (scrollWidth - clientWidth);
+        },
+        startMinimapDrag(event) {
+            event.preventDefault();
+            this.minimap.isDragging = true;
+            this.updateMinimapPosition(event);
+        },
+        onMinimapDrag(event) {
+            if (!this.minimap.isDragging) return;
+            event.preventDefault();
+            this.updateMinimapPosition(event);
+        },
+        stopMinimapDrag() {
+            this.minimap.isDragging = false;
+        },
+        updateMinimapPosition(event) {
+            const minimapEl = this.$refs.minimapTrack;
+            const container = this.$refs.timelineContainer;
+            if (!minimapEl || !container) return;
+            
+            const rect = minimapEl.getBoundingClientRect();
+            const clickX = event.clientX - rect.left;
+            const ratio = clickX / rect.width;
+            
+            const scrollWidth = container.scrollWidth;
+            const clientWidth = container.clientWidth;
+            const maxScroll = scrollWidth - clientWidth;
+            
+            container.scrollLeft = ratio * maxScroll;
+        },
+        clickMinimapTrack(event) {
+            // 点击缩略图轨道直接跳转
+            if (event.target === this.$refs.minimapTrack) {
+                this.updateMinimapPosition(event);
+            }
+        },
+        getMinimapItemStyle(event) {
+            // 计算每个事件在缩略图中的位置和颜色
+            const position = this.getEventPosition(event.date);  // 传入 event.date，返回数字
+            const totalWidth = this.timelineWidth;
+            const leftPercent = (position / totalWidth) * 100;
+            
+            // 使用与 card-header 相同的渐变逻辑
+            const gradient = this.getTagGradient(event.tags);
+            
+            return {
+                position: 'absolute',
+                left: leftPercent + '%',
+                top: '0',
+                width: '5px',
+                height: '100%',
+                background: gradient,
+                opacity: '0.9',
+                borderRadius: '2px',
+                zIndex: '1'
+            };
+        },
     },
     mounted() {
         this.loadData().then(() => {
@@ -636,7 +804,7 @@ createApp({
         this.initDragScroll();
         
         // 添加鼠标滚轮缩放功能
-        this.$refs.timelineContainer.addEventListener('wheel', (e) => {
+        this.wheelListener = (e) => {
             if (e.ctrlKey) {
                 e.preventDefault();
                 if (e.deltaY < 0) {
@@ -645,13 +813,45 @@ createApp({
                     this.zoomOut();
                 }
             }
-        });
+        };
+        this.$refs.timelineContainer.addEventListener('wheel', this.wheelListener);
+        
+        // 监听滚动事件更新缩略图
+        const container = this.$refs.timelineContainer;
+        if (container) {
+            container.addEventListener('scroll', () => {
+                this.updateMinimapViewport();
+            });
+            // 初始化缩略图视口
+            this.$nextTick(() => {
+                this.updateMinimapViewport();
+            });
+        }
+        
+        // 监听全局鼠标事件用于拖动缩略图
+        document.addEventListener('mousemove', this.onMinimapDrag);
+        document.addEventListener('mouseup', this.stopMinimapDrag);
         
         // 点击外部关闭面板
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('.floating-button') && !e.target.closest('.control-panel') && !e.target.closest('.add-event-modal')) {
+        this.globalClickListener = (e) => {
+            if (!e.target.closest('.floating-button') && 
+                !e.target.closest('.control-panel') && 
+                !e.target.closest('.add-event-modal')) {
                 this.closeAllPanels();
             }
-        });
+        };
+        document.addEventListener('click', this.globalClickListener);
+    },
+    beforeUnmount() {
+        // 清理全局事件监听器
+        if (this.globalClickListener) {
+            document.removeEventListener('click', this.globalClickListener);
+        }
+        if (this.wheelListener && this.$refs.timelineContainer) {
+            this.$refs.timelineContainer.removeEventListener('wheel', this.wheelListener);
+        }
+        // 清理缩略图拖动监听器
+        document.removeEventListener('mousemove', this.onMinimapDrag);
+        document.removeEventListener('mouseup', this.stopMinimapDrag);
     }
 }).mount('#app');
