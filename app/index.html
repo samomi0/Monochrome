@@ -37,33 +37,6 @@
                     <path fill="currentColor" d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20M12,19L8,15H10.5V12H13.5V15H16L12,19Z"/>
                 </svg>
             </button>
-            <!-- 5. 横竖切换 -->
-            <button class="floating-button orientation-btn" @click.stop="toggleOrientation" :title="timelineOrientation === 'horizontal' ? '切换到垂直视图' : '切换到水平视图'">
-                <!-- 水平视图图标：水平时间轴 + 旋转箭头 -->
-                <svg v-if="timelineOrientation === 'horizontal'" viewBox="0 0 24 24" width="24" height="24">
-                    <!-- 水平时间轴 -->
-                    <line x1="3" y1="12" x2="21" y2="12" stroke="currentColor" stroke-width="2" opacity="0.8"/>
-                    <!-- 时间轴节点 -->
-                    <circle cx="7" cy="12" r="2" fill="currentColor" opacity="0.6"/>
-                    <circle cx="12" cy="12" r="2" fill="currentColor" opacity="0.6"/>
-                    <circle cx="17" cy="12" r="2" fill="currentColor" opacity="0.6"/>
-                    <!-- 旋转箭头指向垂直 -->
-                    <path d="M19 16 L16 19 L19 22" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M5 8 L8 5 L5 2" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-                <!-- 垂直视图图标：垂直时间轴 + 旋转箭头 -->
-                <svg v-else viewBox="0 0 24 24" width="24" height="24">
-                    <!-- 垂直时间轴 -->
-                    <line x1="12" y1="3" x2="12" y2="21" stroke="currentColor" stroke-width="2" opacity="0.8"/>
-                    <!-- 时间轴节点 -->
-                    <circle cx="12" cy="7" r="2" fill="currentColor" opacity="0.6"/>
-                    <circle cx="12" cy="12" r="2" fill="currentColor" opacity="0.6"/>
-                    <circle cx="12" cy="17" r="2" fill="currentColor" opacity="0.6"/>
-                    <!-- 旋转箭头指向水平 -->
-                    <path d="M16 19 L19 16 L22 19" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-                    <path d="M8 5 L5 8 L2 5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-            </button>
         </div>
 
         <!-- 缩放控制面板 -->
@@ -468,6 +441,8 @@
                     :key="event.date"
                     class="minimap-item"
                     :style="getMinimapItemStyle(event)"
+                    @click="scrollToEvent(event)"
+                    :title="event.title"
                 ></div>
                 <!-- 可拖动的视口窗口 -->
                 <div 

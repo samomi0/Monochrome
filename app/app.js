@@ -520,30 +520,30 @@ createApp({
             this.showAddEventPanel = false;
         },
         // 切换时间轴方向
-        toggleOrientation() {
-            this.timelineOrientation = this.timelineOrientation === 'horizontal' ? 'vertical' : 'horizontal';
-            // 切换后重置滚动位置和容器样式
-            this.$nextTick(() => {
-                const container = this.$refs.timelineContainer;
-                const timeline = this.$refs.timeline;
+        // toggleOrientation() {
+        //     this.timelineOrientation = this.timelineOrientation === 'horizontal' ? 'vertical' : 'horizontal';
+        //     // 切换后重置滚动位置和容器样式
+        //     this.$nextTick(() => {
+        //         const container = this.$refs.timelineContainer;
+        //         const timeline = this.$refs.timeline;
                 
-                if (container) {
-                    if (this.timelineOrientation === 'horizontal') {
-                        // 水平模式：滚动到最右边
-                        container.scrollLeft = 0;
-                        setTimeout(() => {
-                            container.scrollLeft = container.scrollWidth - container.clientWidth;
-                        }, 100);
-                    } else {
-                        // 垂直模式：滚动到最下方
-                        container.scrollTop = 0;
-                        setTimeout(() => {
-                            container.scrollTop = container.scrollHeight - container.clientHeight;
-                        }, 100);
-                    }
-                }
-            });
-        },
+        //         if (container) {
+        //             if (this.timelineOrientation === 'horizontal') {
+        //                 // 水平模式：滚动到最右边
+        //                 container.scrollLeft = 0;
+        //                 setTimeout(() => {
+        //                     container.scrollLeft = container.scrollWidth - container.clientWidth;
+        //                 }, 100);
+        //             } else {
+        //                 // 垂直模式：滚动到最下方
+        //                 container.scrollTop = 0;
+        //                 setTimeout(() => {
+        //                     container.scrollTop = container.scrollHeight - container.clientHeight;
+        //                 }, 100);
+        //             }
+        //         }
+        //     });
+        // },
         // 处理图片加载错误
         handleImageError(event) {
             console.error('图片加载失败:', event.target.src);
@@ -785,8 +785,26 @@ createApp({
                 background: gradient,
                 opacity: '0.9',
                 borderRadius: '2px',
-                zIndex: '1'
+                zIndex: '1',
+                cursor: 'pointer'
             };
+        },
+        scrollToEvent(event) {
+            // 点击色带时滚动到对应事件的位置
+            const container = this.$refs.timelineContainer;
+            if (!container) return;
+            
+            const position = this.getEventPosition(event.date);
+            const containerWidth = container.clientWidth;
+            
+            // 将事件位置居中显示
+            const scrollTarget = position - (containerWidth / 2);
+            
+            // 平滑滚动到目标位置
+            container.scrollTo({
+                left: Math.max(0, scrollTarget),
+                behavior: 'smooth'
+            });
         },
     },
     mounted() {
