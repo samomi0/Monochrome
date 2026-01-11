@@ -1,3 +1,4 @@
 /app/data/data.yaml
+/app/data/config.yaml
 *.bak
 .vscode/*
