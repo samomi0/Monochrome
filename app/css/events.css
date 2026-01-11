@@ -3,7 +3,7 @@
 /* ===== 事件卡片 ===== */
 .event-card {
     width: 300px;
-    background: white;
+    background: var(--card-bg);
     border-radius: 12px;
     padding: 0;
     margin-top: 24px;
@@ -35,7 +35,7 @@
     right: 12px;
     width: 32px;
     height: 32px;
-    background: rgba(255, 255, 255, 0.95);
+    background: var(--card-bg);
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -48,7 +48,7 @@
 
 .event-card:hover .image-badge {
     transform: scale(1.1);
-    background: white;
+    background: var(--card-bg);
     box-shadow: 0 4px 12px rgba(159, 168, 163, 0.3);
 }
 
@@ -61,7 +61,7 @@
 }
 
 .card-header {
-    background: linear-gradient(135deg, var(--primary), var(--secondary));
+    background: linear-gradient(in oklch 135deg, var(--primary), var(--secondary));
     padding: 16px 20px;
     position: relative;
     z-index: 2;
@@ -110,8 +110,8 @@
 
 .event-footer {
     padding: 16px 20px;
-    background: #f8f6f4;
-    border-top: 1px solid #ece8e3;
+    background: var(--footer-bg);
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
     position: relative;
     z-index: 2;
 }
@@ -151,7 +151,7 @@
     left: 0;
     right: 0;
     height: 40%;
-    background: linear-gradient(180deg, 
+    background: linear-gradient(in oklch 180deg, 
         rgba(255, 255, 255, 0.3) 0%, 
         rgba(255, 255, 255, 0) 100%);
     pointer-events: none;
@@ -167,7 +167,7 @@
     right: 1px;
     bottom: 1px;
     border-radius: 11px;
-    background: linear-gradient(135deg, 
+    background: linear-gradient(in oklch 135deg, 
         rgba(255, 255, 255, 0.15) 0%,
         rgba(255, 255, 255, 0.05) 50%,
         rgba(255, 255, 255, 0.1) 100%);
@@ -215,7 +215,7 @@
     transform: translateX(-50%);
     width: 400px;
     max-width: 90vw;
-    background: white;
+    background: var(--card-bg);
     border-radius: 12px;
     padding: 8px;
     box-shadow: 0 12px 48px rgba(0, 0, 0, 0.2);

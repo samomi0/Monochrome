@@ -14,7 +14,7 @@ export async function loadYAMLData(url) {
 // 验证事件数据
 export function validateEvents(events) {
     return events.filter(event => {
-        if (!event.date || !event.title) {
+        if (!event.date || (!event.title && event.type !== 'blog')) {
             console.warn('跳过无效事件（缺少日期或标题）:', event);
             return false;
         }

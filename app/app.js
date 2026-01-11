@@ -38,6 +38,13 @@ import { saveNewEvent as saveEventFn,
          resetNewEventForm 
 } from './js/eventUtils.js';
 
+import { loadBlogContent, 
+         extractSummary, 
+         isBlogType, 
+         getCachedBlogContent, 
+         setCachedBlogContent 
+} from './js/blogUtils.js';
+
 const { createApp } = Vue;
 
 createApp({
@@ -53,6 +60,7 @@ createApp({
             showTags: true,
             showLocation: true,
             showNote: true,
+            isDarkMode: false,
             tagColors: {},
             newEvent: resetNewEventForm(),
             newEventTagInput: '',
@@ -64,6 +72,19 @@ createApp({
                 isDragging: false,
                 viewportWidth: 0,
                 scrollRatio: 0
+            },
+            // Blog相关状态
+            blogConfig: {
+                enabled: true,
+                summaryLength: 150,
+                basePath: './data/blog/'
+            },
+            currentBlog: {
+                visible: false,
+                loading: false,
+                event: null,
+                content: '',
+                renderedContent: ''
             }
         };
     },
@@ -191,6 +212,22 @@ createApp({
                             this.showNote = configData.config.display.showNote;
                         }
                     }
+                    // 加载blog配置
+                    if (configData.config.blog) {
+                        if (configData.config.blog.enabled !== undefined) {
+                            this.blogConfig.enabled = configData.config.blog.enabled;
+                        }
+                        if (configData.config.blog.summaryLength !== undefined) {
+                            this.blogConfig.summaryLength = configData.config.blog.summaryLength;
+                        }
+                        if (configData.config.blog.basePath !== undefined) {
+                            this.blogConfig.basePath = configData.config.blog.basePath;
+                        }
+                        if (configData.config.blog.readMoreColor !== undefined) {
+                            // 设置CSS变量
+                            document.documentElement.style.setProperty('--read-more-color', configData.config.blog.readMoreColor);
+                        }
+                    }
                 }
                 
                 const data = await loadYAMLData('./data/data.yaml');
@@ -204,6 +241,18 @@ createApp({
                     const skipped = data.events.length - validEvents.length;
                     if (skipped > 0) {
                         console.warn(`已跳过 ${skipped} 个无效事件`);
+                    }
+                    
+                    // 预加载blog摘要
+                    if (this.blogConfig.enabled) {
+                        validEvents.forEach(async (event) => {
+                            if (this.isBlogEvent(event) && event.contentFile) {
+                                const result = await loadBlogContent(event.contentFile, this.blogConfig.basePath);
+                                if (result.success) {
+                                    setCachedBlogContent(event.contentFile, result.content);
+                                }
+                            }
+                        });
                     }
                 } else {
                     console.warn('未找到有效的事件数据');
@@ -249,10 +298,10 @@ createApp({
             this.selectedTags = {};
         },
         getTagColor(tag) {
-            return getTagColor(tag, this.tagColors);
+            return getTagColor(tag, this.tagColors, this.isDarkMode);
         },
         getTagGradient(tags) {
-            return getTagGradient(tags, this.tagColors);
+            return getTagGradient(tags, this.tagColors, this.isDarkMode);
         },
         
         // 面板切换 - 使用uiHelpers模块
@@ -281,6 +330,13 @@ createApp({
         closeAllPanels() {
             const state = closeAllPanels();
             Object.assign(this, state);
+        },
+        
+        // 主题切换
+        toggleTheme() {
+            this.isDarkMode = !this.isDarkMode;
+            document.body.classList.toggle('dark-mode', this.isDarkMode);
+            localStorage.setItem('theme', this.isDarkMode ? 'dark' : 'light');
         },
         
         // 图片处理 - 使用uiHelpers模块
@@ -404,8 +460,60 @@ createApp({
             const position = getEventPosition(event.date, this.timelineRange, this.zoomLevel);
             scrollToEvent(container, position, container.clientWidth);
         },
+        
+        // Blog功能
+        isBlogEvent(event) {
+            return isBlogType(event);
+        },
+        getBlogSummary(event) {
+            if (!event.contentFile) return '';
+            const cached = getCachedBlogContent(event.contentFile);
+            if (cached) {
+                return extractSummary(cached, this.blogConfig.summaryLength);
+            }
+            return '加载中...';
+        },
+        async openBlog(event) {
+            if (!this.isBlogEvent(event)) return;
+            
+            this.currentBlog.event = event;
+            this.currentBlog.visible = true;
+            this.currentBlog.loading = true;
+            
+            // 检查缓存
+            let content = getCachedBlogContent(event.contentFile);
+            
+            if (!content) {
+                // 加载内容
+                const result = await loadBlogContent(event.contentFile, this.blogConfig.basePath);
+                if (result.success) {
+                    content = result.content;
+                    setCachedBlogContent(event.contentFile, content);
+                } else {
+                    content = `# 加载失败\n\n无法加载博客内容：${result.error}`;
+                }
+            }
+            
+            this.currentBlog.content = content;
+            // 使用marked渲染Markdown
+            this.currentBlog.renderedContent = marked.parse(content);
+            this.currentBlog.loading = false;
+        },
+        closeBlog() {
+            this.currentBlog.visible = false;
+            this.currentBlog.event = null;
+            this.currentBlog.content = '';
+            this.currentBlog.renderedContent = '';
+        },
     },
     mounted() {
+        // 加载保存的主题偏好
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark') {
+            this.isDarkMode = true;
+            document.body.classList.add('dark-mode');
+        }
+        
         this.loadData().then(() => {
             this.$nextTick(() => {
                 const container = this.$refs.timelineContainer;

@@ -6,7 +6,7 @@
 }
 
 :root {
-    /* 莫兰迪色系 */
+    /* 莫兰迪色系 - 白天模式 */
     --primary: #9fa8a3;
     --secondary: #c7b3be;
     --accent: #d4a5a5;
@@ -15,14 +15,39 @@
     --text-dark: #5a5a5a;
     --text-light: #8c8c8c;
     --card-bg: #ffffff;
+    --container-bg: #ffffff;
+    --panel-bg: #ffffff;
+    --input-bg: #ffffff;
+    --footer-bg: #f9f7f4;      /* 卡片footer区域 - 米黄色 */
+    --minimap-bg: rgba(255, 255, 255, 0.95);
     --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
     --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
     --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
+/* 夜间模式 */
+body.dark-mode {
+    --primary: #7a8580;
+    --secondary: #9d8a98;
+    --accent: #b38a8a;
+    --bg-gradient-1: #2a2826;
+    --bg-gradient-2: #3a3530;
+    --text-dark: #d0d0d0;
+    --text-light: #a0a0a0;
+    --card-bg: #3d3a37;        /* 卡片背景 - 最亮 */
+    --container-bg: #35322f;   /* 容器背景 - 中间层 */
+    --panel-bg: #2d2b28;       /* 面板背景 - 较暗 */
+    --input-bg: #45423f;       /* 输入框背景 - 更亮一点 */
+    --footer-bg: #33302d;      /* 卡片footer区域 - 比卡片主体暗 */
+    --minimap-bg: rgba(61, 58, 55, 0.95);  /* 缩略图背景 */
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-    background: linear-gradient(135deg, var(--bg-gradient-1) 0%, var(--bg-gradient-2) 100%);
+    background: linear-gradient(in oklch 135deg, var(--bg-gradient-1) 0%, var(--bg-gradient-2) 100%);
     min-height: 100vh;
     padding: 0;
     overflow-x: hidden;

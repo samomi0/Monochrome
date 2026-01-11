@@ -1,7 +1,7 @@
 // 标签工具模块
 
 // 获取标签颜色
-export function getTagColor(tag, tagColors) {
+export function getTagColor(tag, tagColors, isDarkMode = false) {
     if (tagColors[tag]) {
         return tagColors[tag];
     }
@@ -11,16 +11,22 @@ export function getTagColor(tag, tagColors) {
         hash = tag.charCodeAt(i) + ((hash << 5) - hash);
     }
     const hue = hash % 360;
+    
+    // 深色主题下调整颜色参数
+    if (isDarkMode) {
+        // 降低饱和度，提高亮度，让颜色更柔和
+        return `hsl(${hue}, 45%, 70%)`;
+    }
     return `hsl(${hue}, 70%, 60%)`;
 }
 
 // 获取标签渐变色
-export function getTagGradient(tags, tagColors) {
+export function getTagGradient(tags, tagColors, isDarkMode = false) {
     if (!tags || tags.length === 0) {
         return 'linear-gradient(135deg, #667eea, #764ba2)';
     }
-    const color1 = getTagColor(tags[0], tagColors);
-    const color2 = tags.length > 1 ? getTagColor(tags[1], tagColors) : color1;
+    const color1 = getTagColor(tags[0], tagColors, isDarkMode);
+    const color2 = tags.length > 1 ? getTagColor(tags[1], tagColors, isDarkMode) : color1;
     return `linear-gradient(135deg, ${color1}, ${color2})`;
 }
 

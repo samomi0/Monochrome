@@ -7,31 +7,41 @@
     <link rel="stylesheet" href="css/main.css">
     <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
 </head>
 <body>
     <div id="app">
         <!-- 浮动控制按钮 -->
         <div class="floating-controls">
-            <!-- 1. 缩放 -->
+            <!-- 主题切换 -->
+            <button class="floating-button theme-btn" @click.stop="toggleTheme" :title="isDarkMode ? '切换到白天模式' : '切换到夜间模式'">
+                <svg v-if="!isDarkMode" viewBox="0 0 24 24" width="24" height="24">
+                    <path fill="currentColor" d="M17.75,4.09L15.22,6.03L16.13,9.09L13.5,7.28L10.87,9.09L11.78,6.03L9.25,4.09L12.44,4L13.5,1L14.56,4L17.75,4.09M21.25,11L19.61,12.25L20.2,14.23L18.5,13.06L16.8,14.23L17.39,12.25L15.75,11L17.81,10.95L18.5,9L19.19,10.95L21.25,11M18.97,15.95C19.8,15.87 20.69,17.05 20.16,17.8C19.84,18.25 19.5,18.67 19.08,19.07C15.17,23 8.84,23 4.94,19.07C1.03,15.17 1.03,8.83 4.94,4.93C5.34,4.53 5.76,4.17 6.21,3.85C6.96,3.32 8.14,4.21 8.06,5.04C7.79,7.9 8.75,10.87 10.95,13.06C13.14,15.26 16.1,16.22 18.97,15.95M17.33,17.97C14.5,17.81 11.7,16.64 9.53,14.5C7.36,12.31 6.2,9.5 6.04,6.68C3.23,9.82 3.34,14.64 6.35,17.66C9.37,20.67 14.19,20.78 17.33,17.97Z"/>
+                </svg>
+                <svg v-else viewBox="0 0 24 24" width="24" height="24">
+                    <path fill="currentColor" d="M12,7A5,5 0 0,1 17,12A5,5 0 0,1 12,17A5,5 0 0,1 7,12A5,5 0 0,1 12,7M12,9A3,3 0 0,0 9,12A3,3 0 0,0 12,15A3,3 0 0,0 15,12A3,3 0 0,0 12,9M12,2L14.39,5.42C13.65,5.15 12.84,5 12,5C11.16,5 10.35,5.15 9.61,5.42L12,2M3.34,7L7.5,6.65C6.9,7.16 6.36,7.78 5.94,8.5C5.5,9.24 5.25,10 5.11,10.79L3.34,7M3.36,17L5.12,13.23C5.26,14 5.53,14.78 5.95,15.5C6.37,16.24 6.91,16.86 7.5,17.37L3.36,17M20.65,7L18.88,10.79C18.74,10 18.47,9.23 18.05,8.5C17.63,7.78 17.1,7.15 16.5,6.64L20.65,7M20.64,17L16.5,17.36C17.09,16.85 17.62,16.22 18.04,15.5C18.46,14.77 18.73,14 18.87,13.21L20.64,17M12,22L9.59,18.56C10.33,18.83 11.14,19 12,19C12.82,19 13.63,18.83 14.37,18.56L12,22Z"/>
+                </svg>
+            </button>
+            <!-- 缩放 -->
             <button class="floating-button zoom-btn" @click.stop="toggleZoomPanel" :class="{ active: showZoomPanel }">
                 <svg viewBox="0 0 24 24" width="24" height="24">
                     <path fill="currentColor" d="M15.5,14L20.5,19L19,20.5L14,15.5V14.71L13.73,14.43C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.43,13.73L14.71,14H15.5M9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14M12,10H10V12H9V10H7V9H9V7H10V9H12V10Z"/>
                 </svg>
             </button>
-            <!-- 2. 新增 -->
+            <!-- 新增 -->
             <button class="floating-button add-btn" @click.stop="toggleAddEventPanel" :class="{ active: showAddEventPanel }" title="新增事件">
                 <svg viewBox="0 0 24 24" width="24" height="24">
                     <path fill="currentColor" d="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z"/>
                 </svg>
             </button>
-            <!-- 3. 筛选 -->
+            <!-- 筛选 -->
             <button class="floating-button filter-btn" @click.stop="toggleFilterPanel" :class="{ active: showFilterPanel }">
                 <svg viewBox="0 0 24 24" width="24" height="24">
                     <path fill="currentColor" d="M14,12V19.88C14.04,20.18 13.94,20.5 13.71,20.71C13.32,21.1 12.69,21.1 12.3,20.71L10.29,18.7C10.06,18.47 9.96,18.16 10,17.87V12H9.97L4.21,4.62C3.87,4.19 3.95,3.56 4.38,3.22C4.57,3.08 4.78,3 5,3V3H19V3C19.22,3 19.43,3.08 19.62,3.22C20.05,3.56 20.13,4.19 19.79,4.62L14.03,12H14Z"/>
                 </svg>
                 <span v-if="Object.keys(selectedTags).length" class="badge">{{ Object.keys(selectedTags).length }}</span>
             </button>
-            <!-- 4. 保存 -->
+            <!-- 保存 -->
             <button class="floating-button export-btn" @click.stop="exportDataAsYAML" title="导出数据">
                 <svg viewBox="0 0 24 24" width="24" height="24">
                     <path fill="currentColor" d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20M12,19L8,15H10.5V12H13.5V15H16L12,19Z"/>
@@ -121,10 +131,10 @@
                             }
                         ]"
                         :style="{ 
-                            background: selectedTags[tag] === 'whitelist' ? getTagColor(tag) : 
+                            background: selectedTags[tag] === 'whitelist' ? getTagColor(tag, tagColors, isDarkMode) : 
                                        selectedTags[tag] === 'blacklist' ? '#333' : 'white',
-                            borderColor: getTagColor(tag),
-                            color: selectedTags[tag] ? 'white' : getTagColor(tag)
+                            borderColor: getTagColor(tag, tagColors, isDarkMode),
+                            color: selectedTags[tag] ? 'white' : getTagColor(tag, tagColors, isDarkMode)
                         }"
                         @click="toggleTag(tag)"
                     >
@@ -203,7 +213,7 @@
                                     v-for="tag in newEvent.tags" 
                                     :key="tag" 
                                     class="tag-item"
-                                    :style="{ background: getTagColor(tag) }"
+                                    :style="{ background: getTagColor(tag, tagColors, isDarkMode) }"
                                 >
                                     {{ tag }}
                                     <button @click="removeTagFromNewEvent(tag)" class="remove-tag">×</button>
@@ -321,7 +331,13 @@
                     :style="{ left: getEventPosition(event.date) + 'px' }"
                 >
                     <div class="event-dot"></div>
-                    <div class="event-card">
+                    <div class="event-card" :class="{ 'blog-card': isBlogEvent(event) }">
+                        <!-- Blog标记 -->
+                        <div v-if="isBlogEvent(event)" class="blog-badge" :class="{ 'has-image-badge': event.image }">
+                            <svg viewBox="0 0 24 24" width="16" height="16">
+                                <path fill="currentColor" d="M19,2L14,6.5V17.5L19,13V2M6.5,5C4.55,5 2.45,5.4 1,6.5V21.16C1,21.41 1.25,21.66 1.5,21.66C1.6,21.66 1.65,21.59 1.75,21.59C3.1,20.94 5.05,20.5 6.5,20.5C8.45,20.5 10.55,20.9 12,22C13.35,21.15 15.8,20.5 17.5,20.5C19.15,20.5 20.85,20.81 22.25,21.56C22.35,21.61 22.4,21.59 22.5,21.59C22.75,21.59 23,21.34 23,21.09V6.5C22.4,6.05 21.75,5.75 21,5.5V19C19.9,18.65 18.7,18.5 17.5,18.5C15.8,18.5 13.35,19.15 12,20V6.5C10.55,5.4 8.45,5 6.5,5Z"/>
+                            </svg>
+                        </div>
                         <!-- 图片标记 -->
                         <div v-if="event.image" class="image-badge">
                             <svg viewBox="0 0 24 24" width="16" height="16">
@@ -336,18 +352,25 @@
                                 {{ formatDate(event.date) }}
                             </div>
                         </div>
-                        <h3 class="event-title">{{ event.title }}</h3>
-                        <div class="event-subtitle">{{ event.subtitle }}</div>
-                        <p class="event-content">{{ event.content }}</p>
-                        <div class="event-footer">
+                        <!-- 普通事件内容 -->
+                        <template v-if="!isBlogEvent(event)">
+                            <h3 class="event-title">{{ event.title }}</h3>
+                            <div class="event-subtitle">{{ event.subtitle }}</div>
+                            <p class="event-content">{{ event.content }}</p>
+                        </template>
+                        <!-- Blog卡片摘要 -->
+                        <template v-else>
+                            <div class="blog-summary">{{ getBlogSummary(event) }}</div>
+                        </template>
+                        <div class="event-footer" :class="{ 'blog-footer': isBlogEvent(event) }">
                             <div v-if="showTags && event.tags && event.tags.length > 0" class="event-tags">
                                 <span 
                                     v-for="tag in event.tags" 
                                     :key="tag" 
                                     class="tag"
                                     :style="{ 
-                                        '--tag-color': getTagColor(tag),
-                                        background: `linear-gradient(135deg, ${getTagColor(tag)}95 0%, ${getTagColor(tag)}80 50%, ${getTagColor(tag)}90 100%)`
+                                        '--tag-color': getTagColor(tag, tagColors, isDarkMode),
+                                        background: `linear-gradient(in oklch 135deg, ${getTagColor(tag, tagColors, isDarkMode)}95 0%, ${getTagColor(tag, tagColors, isDarkMode)}80 50%, ${getTagColor(tag, tagColors, isDarkMode)}90 100%)`
                                     }"
                                 >{{ tag }}</span>
                             </div>
@@ -365,6 +388,13 @@
                                     {{ event.note }}
                                 </span>
                             </div>
+                            <!-- Blog阅读全文按钮 -->
+                            <button v-if="isBlogEvent(event)" class="read-more-btn" @click="openBlog(event)">
+                                <svg viewBox="0 0 24 24" width="16" height="16">
+                                    <path fill="currentColor" d="M14,3V5H17.59L7.76,14.83L9.17,16.24L19,6.41V10H21V3M19,19H5V5H12V3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V12H19V19Z"/>
+                                </svg>
+                                阅读全文
+                            </button>
                         </div>
                     </div>
                     
@@ -397,6 +427,42 @@
                     }"
                     @mousedown="startMinimapDrag"
                 ></div>
+            </div>
+        </div>
+        
+        <!-- Blog模态弹窗 -->
+        <div class="blog-modal" :class="{ active: currentBlog.visible }" @click.self="closeBlog">
+            <div class="blog-modal-content">
+                <div class="blog-modal-header" :style="{ background: currentBlog.event ? getTagGradient(currentBlog.event.tags) : 'linear-gradient(in oklch 135deg, var(--accent), var(--secondary))' }">
+                    <div class="blog-modal-meta">
+                        <div class="blog-modal-date">{{ currentBlog.event ? formatDate(currentBlog.event.date) : '' }}</div>
+                        <div class="blog-modal-info">
+                            <span v-if="currentBlog.event && currentBlog.event.location">
+                                <svg viewBox="0 0 24 24" width="14" height="14" style="vertical-align: middle;">
+                                    <path fill="currentColor" d="M12,11.5A2.5,2.5 0 0,1 9.5,9A2.5,2.5 0 0,1 12,6.5A2.5,2.5 0 0,1 14.5,9A2.5,2.5 0 0,1 12,11.5M12,2A7,7 0 0,0 5,9C5,14.25 12,22 12,22C12,22 19,14.25 19,9A7,7 0 0,0 12,2Z"/>
+                                </svg>
+                                {{ currentBlog.event.location }}
+                            </span>
+                            <span v-if="currentBlog.event && currentBlog.event.tags && currentBlog.event.tags.length > 0">
+                                <svg viewBox="0 0 24 24" width="14" height="14" style="vertical-align: middle;">
+                                    <path fill="currentColor" d="M5.5,7A1.5,1.5 0 0,1 4,5.5A1.5,1.5 0 0,1 5.5,4A1.5,1.5 0 0,1 7,5.5A1.5,1.5 0 0,1 5.5,7M21.41,11.58L12.41,2.58C12.05,2.22 11.55,2 11,2H4C2.89,2 2,2.89 2,4V11C2,11.55 2.22,12.05 2.59,12.41L11.58,21.41C11.95,21.77 12.45,22 13,22C13.55,22 14.05,21.77 14.41,21.41L21.41,14.41C21.77,14.05 22,13.55 22,13C22,12.44 21.77,11.94 21.41,11.58Z"/>
+                                </svg>
+                                {{ currentBlog.event.tags.join(', ') }}
+                            </span>
+                        </div>
+                    </div>
+                    <button class="blog-modal-close" @click="closeBlog">
+                        <svg viewBox="0 0 24 24" width="20" height="20">
+                            <path fill="currentColor" d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="blog-modal-body">
+                    <div v-if="currentBlog.loading" style="text-align: center; padding: 40px;">
+                        <p>加载中...</p>
+                    </div>
+                    <div v-else class="markdown-content" v-html="currentBlog.renderedContent"></div>
+                </div>
             </div>
         </div>
     </div>
