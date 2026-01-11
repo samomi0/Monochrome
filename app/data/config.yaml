@@ -1,0 +1,36 @@
+# 标签颜色配置
+tagColors:
+  重要节点: "#d89c7a" # 莫兰迪灰橙
+  证书: "#9fa8a3" # 莫兰迪灰绿
+  获奖: "#d4c8a5" # 莫兰迪灰金
+  政治面貌: "#ab545a" # 莫兰迪灰红
+  工作: "#b8c5a0" # 莫兰迪灰绿
+  学校: "#c9d1c8" # 莫兰迪灰白
+  观演: "#b3a5c7" # 莫兰迪灰薰衣草
+  游戏: "#a8c5c5" # 莫兰迪灰青
+  旅游: "#c8a8a5" # 莫兰迪灰珊瑚
+  普通事件: "#b8a59f" # 莫兰迪灰棕
+
+  # 备用颜色
+  TBD2: "#d4a5a5" # 莫兰迪灰粉
+  备用1: "#d1c7b3" # 莫兰迪灰米
+  备用2: "#a5b8d4" # 莫兰迪灰蓝
+  备用3: "#c5a8b4" # 莫兰迪灰玫瑰
+  备用5: "#b3c7a5" # 莫兰迪灰草绿
+  备用6: "#a5c5b8" # 莫兰迪灰薄荷
+  备用8: "#a8b4c8" # 莫兰迪灰蓝
+  TBD1: "#c7b3be" # 莫兰迪灰紫
+
+# 应用配置
+config:
+  # 默认缩放级别
+  defaultZoomLevel: 1
+  # 每天的基础像素数
+  basePixelsPerDay: 5
+  # 显示选项
+  display:
+    showTags: true      # 默认显示标签
+    showLocation: true  # 默认显示地点
+    showNote: true      # 默认显示备注
+  # 初始滚动位置：start（开始）或 end（末尾）
+  initialScrollPosition: "end"

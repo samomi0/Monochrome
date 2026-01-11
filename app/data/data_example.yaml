@@ -9,14 +9,8 @@ config:
     showTags: true      # 默认显示标签
     showLocation: true  # 默认显示地点
     showNote: true      # 默认显示备注
-  # 时间轴方向：horizontal（水平）或 vertical（垂直）
-  timelineOrientation: "horizontal"
   # 初始滚动位置：start（开始）或 end（末尾）
   initialScrollPosition: "end"
-  # 应用元信息
-  meta:
-    author: "Misaki"
-    year: "2025"
 
 # 标签颜色配置
 tagColors:

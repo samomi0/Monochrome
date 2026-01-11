@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Monochrome</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="css/main.css">
     <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
 </head>
@@ -236,17 +236,13 @@
         </transition>
 
         <!-- 时间轴容器 -->
-        <div class="timeline-container" ref="timelineContainer" :class="{ 'vertical': timelineOrientation === 'vertical' }">
+        <div class="timeline-container" ref="timelineContainer">
             <div class="timeline" 
-                :style="{ 
-                    width: timelineOrientation === 'horizontal' ? timelineWidth + 'px' : '700px',
-                    height: timelineOrientation === 'vertical' ? timelineHeight + 'px' : 'auto'
-                }" 
-                ref="timeline" 
-                :class="{ 'vertical': timelineOrientation === 'vertical' }">
+                :style="{ width: timelineWidth + 'px' }" 
+                ref="timeline">
                 
                 <!-- 水平时间轴 -->
-                <svg v-if="timelineOrientation === 'horizontal'" class="timeline-axis" :width="timelineWidth" height="120">
+                <svg class="timeline-axis" :width="timelineWidth" height="120">
                     <defs>
                         <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
                             <stop offset="0%" style="stop-color:#9fa8a3;stop-opacity:0.4" />
@@ -311,54 +307,6 @@
                         </text>
                     </g>
                 </svg>
-                
-                <!-- 垂直时间轴 -->
-                <svg v-if="timelineOrientation === 'vertical'" class="timeline-axis vertical-axis" width="120" :height="timelineHeight">
-                    <defs>
-                        <linearGradient id="verticalLineGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                            <stop offset="0%" style="stop-color:#9fa8a3;stop-opacity:0.4" />
-                            <stop offset="30%" style="stop-color:#c7b3be;stop-opacity:0.9" />
-                            <stop offset="50%" style="stop-color:#d4a5a5;stop-opacity:1" />
-                            <stop offset="70%" style="stop-color:#c7b3be;stop-opacity:0.9" />
-                            <stop offset="100%" style="stop-color:#9fa8a3;stop-opacity:0.4" />
-                        </linearGradient>
-                    </defs>
-                    
-                    <!-- 底层发光层 -->
-                    <line x1="60" y1="0" x2="60" :y2="timelineHeight" stroke="url(#verticalLineGradient)" stroke-width="12" opacity="0.2" filter="url(#lineGlow)"/>
-                    <!-- 底层阴影线 -->
-                    <line x1="60" y1="0" x2="60" :y2="timelineHeight" stroke="#c7b3be" stroke-width="9" opacity="0.15"/>
-                    <!-- 主时间轴线 -->
-                    <line x1="60" y1="0" x2="60" :y2="timelineHeight" stroke="url(#verticalLineGradient)" stroke-width="7" filter="url(#lineShadow)"/>
-                    <!-- 高光线 -->
-                    <line x1="57" y1="0" x2="57" :y2="timelineHeight" stroke="rgba(255,255,255,0.6)" stroke-width="2" opacity="0.8"/>
-                    
-                    <!-- 垂直刻度 -->
-                    <g v-for="tick in ticks" :key="'vertical-' + tick.date">
-                        <!-- 普通刻度线 -->
-                        <line 
-                            v-if="!tick.isTimeJump"
-                            :x1="tick.isEvent ? 45 : 50" 
-                            :y1="tick.x" 
-                            :x2="tick.isEvent ? 75 : 70" 
-                            :y2="tick.x" 
-                            :stroke="tick.isEvent ? '#c7b3be' : '#e2d5d5'" 
-                            :stroke-width="tick.isEvent ? 3 : 2"
-                        />
-                        <!-- 文字标签 -->
-                        <text 
-                            :x="tick.isEvent ? 30 : (tick.isTimeJump ? 25 : 35)" 
-                            :y="tick.x + 5" 
-                            text-anchor="start" 
-                            :font-size="tick.isEvent ? 11 : (tick.isTimeJump ? 10 : 9)"
-                            :fill="tick.isEvent ? '#666' : (tick.isTimeJump ? '#d4a5a5' : '#bbb')"
-                            :font-weight="tick.isEvent ? '600' : (tick.isTimeJump ? '700' : '400')"
-                            font-family="system-ui, -apple-system, sans-serif"
-                        >
-                            {{ tick.label }}
-                        </text>
-                    </g>
-                </svg>
 
                 <!-- 事件节点 -->
                 <div 
@@ -368,13 +316,9 @@
                     :class="{ 
                         'above-line': getOriginalIndex(event) % 2 === 0, 
                         'below-line': getOriginalIndex(event) % 2 !== 0,
-                        'has-image': event.image,
-                        'vertical-mode': timelineOrientation === 'vertical'
+                        'has-image': event.image
                     }"
-                    :style="timelineOrientation === 'horizontal' ? 
-                        { left: getEventPosition(event.date) + 'px' } :
-                        { top: getVerticalEventPosition(event.date) + 'px' }
-                    "
+                    :style="{ left: getEventPosition(event.date) + 'px' }"
                 >
                     <div class="event-dot"></div>
                     <div class="event-card">
@@ -426,14 +370,14 @@
                     
                     <!-- 图片预览（移到卡片外部） - 上方卡片图片在下，下方卡片图片在上 -->
                     <div v-if="event.image" class="image-preview" :class="{ 'preview-below': getOriginalIndex(event) % 2 === 0, 'preview-above': getOriginalIndex(event) % 2 !== 0 }">
-                        <img :src="'./image/' + event.image" :alt="event.title" @error="handleImageError">
+                        <img :src="event.image" :alt="event.title" @error="handleImageError">
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- 缩略图滚动栏 (仅水平模式) -->
-        <div v-if="timelineOrientation === 'horizontal'" class="minimap-scrollbar">
+        <div class="minimap-scrollbar">
             <div class="minimap-track" ref="minimapTrack" @mousedown="clickMinimapTrack">
                 <!-- 事件颜色带 -->
                 <div 
@@ -455,17 +399,8 @@
                 ></div>
             </div>
         </div>
-
-        <!-- 页脚信息 -->
-        <footer class="app-footer">
-            <div class="footer-content">
-                <span class="footer-author">{{ appMeta.author }}</span>
-                <span class="footer-divider">|</span>
-                <span class="footer-year">{{ appMeta.year }}</span>
-            </div>
-        </footer>
     </div>
 
-    <script src="app.js"></script>
+    <script type="module" src="app.js"></script>
 </body>
 </html>

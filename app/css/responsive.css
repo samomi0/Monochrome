@@ -1,0 +1,31 @@
+/* 响应式设计 */
+
+@media (max-width: 768px) {
+    .floating-controls {
+        top: 16px;
+        right: 16px;
+        gap: 8px;
+    }
+    
+    .floating-button {
+        width: 48px;
+        height: 48px;
+    }
+    
+    .control-panel {
+        top: 76px;
+        right: 16px;
+        min-width: calc(100vw - 32px);
+    }
+    
+    .event-card {
+        width: 280px;
+    }
+    
+    .timeline-container {
+        padding: 40px 20px;
+        margin: 20px;
+        border-radius: 16px;
+        max-width: calc(100% - 40px);
+    }
+}
