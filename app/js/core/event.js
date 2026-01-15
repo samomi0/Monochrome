@@ -1,16 +1,18 @@
-// 事件管理工具模块
+// 事件核心模块 - 事件数据管理
+import { validateNewEvent } from '../utils/validators.js';
 
-// 保存新事件
-export function saveNewEvent(newEvent, events) {
+/**
+ * 保存新事件
+ * @param {Object} newEvent - 新事件对象
+ * @param {Array} events - 现有事件数组
+ * @param {Object} backendConfig - 后端配置
+ * @returns {Object} 保存结果
+ */
+export function saveNewEvent(newEvent, events, backendConfig = null) {
     // 验证必填字段
-    if (!newEvent.date || !newEvent.title) {
-        return { success: false, message: '请填写日期和标题' };
-    }
-    
-    // 验证日期格式
-    const testDate = new Date(newEvent.date);
-    if (isNaN(testDate.getTime())) {
-        return { success: false, message: '日期格式无效，请使用 YYYY-MM-DD 格式' };
+    const validation = validateNewEvent(newEvent);
+    if (!validation.valid) {
+        return { success: false, message: validation.message };
     }
     
     // 创建新事件对象
@@ -27,19 +29,33 @@ export function saveNewEvent(newEvent, events) {
     if (newEvent.note) event.note = newEvent.note;
     if (newEvent.image) event.image = newEvent.image;
     
-    // 添加到事件列表并排序
+    // 如果配置了后端，返回特殊标记表示需要调用API
+    if (backendConfig && backendConfig.enabled && backendConfig.apiUrl) {
+        return {
+            success: true,
+            useBackend: true,
+            event: event,
+            message: '准备保存到后端服务'
+        };
+    }
+    
+    // 本地模式：添加到事件列表并排序
     const updatedEvents = [...events, event].sort((a, b) => 
         new Date(a.date) - new Date(b.date)
     );
     
     return { 
         success: true, 
+        useBackend: false,
         events: updatedEvents,
         message: '事件已添加！请点击"导出数据"按钮下载更新后的YAML文件'
     };
 }
 
-// 重置新事件表单
+/**
+ * 重置新事件表单
+ * @returns {Object} 空的新事件对象
+ */
 export function resetNewEventForm() {
     return {
         date: new Date().toISOString().split('T')[0],
@@ -51,9 +67,4 @@ export function resetNewEventForm() {
         note: '',
         image: ''
     };
-}
-
-// 获取事件的原始索引
-export function getOriginalIndex(event, events) {
-    return events.findIndex(e => e.date === event.date && e.title === event.title);
 }

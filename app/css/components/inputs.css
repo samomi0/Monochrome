@@ -1,0 +1,124 @@
+/* 表单输入组件样式 */
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-dark);
+    margin-bottom: 8px;
+}
+
+.required {
+    color: var(--accent);
+}
+
+.form-input,
+.form-textarea,
+.form-select {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 14px;
+    color: var(--text-dark);
+    background: var(--input-bg);
+    transition: all 0.2s;
+    font-family: inherit;
+}
+
+.form-input:focus,
+.form-textarea:focus,
+.form-select:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.form-textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.form-select {
+    cursor: pointer;
+    background-color: white;
+}
+
+.form-color {
+    width: 50px;
+    height: 44px;
+    padding: 4px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.form-color:hover {
+    border-color: var(--primary);
+}
+
+.form-hint {
+    display: block;
+    font-size: 12px;
+    color: var(--text-light);
+    margin-top: 6px;
+}
+
+/* === 滑块 === */
+.zoom-slider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.slider {
+    flex: 1;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 6px;
+    border-radius: 3px;
+    background: linear-gradient(in oklch to right, var(--primary), var(--secondary));
+    outline: none;
+}
+
+.slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--card-bg);
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    border: 3px solid var(--primary);
+}
+
+.slider::-moz-range-thumb {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--card-bg);
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    border: 3px solid var(--primary);
+}
+
+/* === 标签输入 === */
+.tag-input-wrapper {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.tag-input-wrapper .form-input {
+    flex: 1;
+}
+
+.tag-selection-wrapper {
+    margin-bottom: 8px;
+}

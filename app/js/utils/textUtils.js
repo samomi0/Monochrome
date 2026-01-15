@@ -1,21 +1,11 @@
-// Blog工具模块
+// 文本工具模块
 
-// 加载blog内容
-export async function loadBlogContent(contentFile, basePath = './data/blog/') {
-    try {
-        const response = await fetch(basePath + contentFile);
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const content = await response.text();
-        return { success: true, content };
-    } catch (error) {
-        console.error('加载blog内容失败:', error);
-        return { success: false, error: error.message };
-    }
-}
-
-// 从Markdown内容中提取摘要
+/**
+ * 从Markdown内容中提取摘要
+ * @param {string} markdownContent - Markdown内容
+ * @param {number} maxLength - 最大长度
+ * @returns {string} 摘要文本
+ */
 export function extractSummary(markdownContent, maxLength = 150) {
     if (!markdownContent) return '';
     
@@ -50,22 +40,11 @@ export function extractSummary(markdownContent, maxLength = 150) {
     return text;
 }
 
-// 检查是否为blog类型
+/**
+ * 检查是否为博客类型
+ * @param {Object} event - 事件对象
+ * @returns {boolean} 是否为博客类型
+ */
 export function isBlogType(event) {
     return event.type === 'blog';
-}
-
-// 缓存管理
-const blogContentCache = new Map();
-
-export function getCachedBlogContent(contentFile) {
-    return blogContentCache.get(contentFile);
-}
-
-export function setCachedBlogContent(contentFile, content) {
-    blogContentCache.set(contentFile, content);
-}
-
-export function clearBlogCache() {
-    blogContentCache.clear();
 }

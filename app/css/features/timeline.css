@@ -1,4 +1,4 @@
-/* 时间轴和事件节点样式 */
+/* 时间轴核心样式 */
 
 /* ===== 时间轴容器 ===== */
 .timeline-container {
@@ -12,15 +12,12 @@
     box-shadow: var(--shadow-md);
     position: relative;
     min-height: 900px;
-    cursor: grab;
+    cursor: default;
     user-select: none;
     z-index: 1;
     transition: all 0.3s ease;
 }
 
-.timeline-container:active {
-    cursor: grabbing;
-}
 
 .timeline {
     position: relative;
@@ -45,6 +42,7 @@
     align-items: center;
     z-index: 1;
     transition: z-index 0s;
+    pointer-events: none;
 }
 
 .event-node:hover {
@@ -90,6 +88,7 @@
     position: relative;
     z-index: 3;
     flex-shrink: 0;
+    pointer-events: auto;
 }
 
 .event-dot::before {
@@ -109,7 +108,7 @@
     background: linear-gradient(in oklch 135deg, #ffffff, #ffe8e8);
 }
 
-/* 滚动条 */
+/* ===== 滚动条 ===== */
 .timeline-container::-webkit-scrollbar {
     height: 12px;
     width: 12px;
@@ -127,76 +126,4 @@
 
 .timeline-container::-webkit-scrollbar-thumb:hover {
     background: linear-gradient(in oklch to right, var(--secondary), var(--primary));
-}
-
-/* 缩略图滚动栏 */
-.minimap-scrollbar {
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 90%;
-    max-width: 1200px;
-    height: 50px;
-    background: var(--minimap-bg);
-    border-radius: 12px;
-    box-shadow: var(--shadow-md);
-    backdrop-filter: blur(10px);
-    z-index: 1000;
-    padding: 8px;
-    transition: all 0.3s ease;
-}
-
-.minimap-scrollbar:hover {
-    box-shadow: 
-        0 6px 24px rgba(0, 0, 0, 0.12),
-        0 0 0 1px rgba(159, 168, 163, 0.3);
-}
-
-.minimap-track {
-    position: relative;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.05);
-    border-radius: 8px;
-    overflow: hidden;
-    cursor: pointer;
-}
-
-.minimap-item {
-    transition: all 0.2s ease;
-}
-
-.minimap-item:hover {
-    opacity: 1 !important;
-    transform: scaleX(1.5) scaleY(1.05);
-    filter: brightness(1.15) drop-shadow(0 0 3px rgba(0, 0, 0, 0.3));
-    z-index: 5 !important;
-}
-
-.minimap-viewport {
-    position: absolute;
-    top: 0;
-    height: 100%;
-    background: rgba(159, 168, 163, 0.15);
-    border: 2px solid rgba(159, 168, 163, 0.5);
-    border-radius: 4px;
-    cursor: grab;
-    transition: background 0.2s ease, border-color 0.2s ease;
-    box-shadow: 
-        inset 0 1px 3px rgba(255, 255, 255, 0.5),
-        0 2px 8px rgba(0, 0, 0, 0.1);
-    z-index: 10;
-    pointer-events: auto;
-}
-
-.minimap-viewport:hover {
-    background: rgba(159, 168, 163, 0.25);
-    border-color: rgba(159, 168, 163, 0.7);
-}
-
-.minimap-viewport:active {
-    cursor: grabbing;
-    background: rgba(159, 168, 163, 0.35);
-    border-color: var(--primary);
 }

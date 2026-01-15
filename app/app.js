@@ -1,49 +1,32 @@
 // 导入所有模块
-import { loadYAMLConfig, 
-         loadYAMLData, 
-         validateEvents, 
-         exportToYAML, 
-         downloadFile 
-} from './js/dataManager.js';
 
-import { initDragScroll, 
-         scrollToEnd, 
-         handleImageError, 
-         updateMinimapViewport, 
-         updateMinimapPosition, 
-         getMinimapItemStyle, 
-         scrollToEvent, 
-         togglePanel, 
-         closeAllPanels 
-} from './js/uiHelpers.js';
+// Services
+import { loadYAMLConfig, loadYAMLData } from './js/services/dataService.js';
+import { loadDataFromAPI, saveEventToAPI } from './js/services/apiService.js';
+import { loadBlogContent } from './js/services/blogService.js';
 
-import { getMonthPosition, 
-         getEventPosition, 
-         getDotOffset, 
-         formatTickLabel, 
-         formatDate, 
-         getOriginalIndex, 
-         generateTicks, 
-         zoomIn as zoomInFn, 
-         zoomOut as zoomOutFn 
-} from './js/timelineUtils.js';
+// Utils
+import { validateEvents } from './js/utils/validators.js';
+import { exportToYAML, downloadFile } from './js/utils/fileUtils.js';
+import { formatDate, formatTickLabel } from './js/utils/dateUtils.js';
+import { getTagColor, getTagGradient } from './js/utils/colorUtils.js';
+import { extractSummary, isBlogType } from './js/utils/textUtils.js';
 
-import { getTagColor, 
-         getTagGradient, 
-         toggleTag, 
-         addTagToNewEvent as addTagFn 
-} from './js/tagUtils.js';
+// Core
+import { getMonthPosition, getEventPosition, getDotOffset, getOriginalIndex, generateTicks } from './js/core/timeline.js';
+import { saveNewEvent as saveEventFn, resetNewEventForm } from './js/core/event.js';
+import { toggleTag, addTagToNewEvent as addTagFn } from './js/core/tag.js';
 
-import { saveNewEvent as saveEventFn, 
-         resetNewEventForm 
-} from './js/eventUtils.js';
+// UI
+import { initDragScroll } from './js/ui/interactions/dragScroll.js';
+import { scrollToEnd, scrollToEvent } from './js/ui/interactions/navigation.js';
+import { zoomIn as zoomInFn, zoomOut as zoomOutFn } from './js/ui/interactions/zoom.js';
+import { updateMinimapViewport, updateMinimapPosition, getMinimapItemStyle } from './js/ui/components/minimap.js';
+import { togglePanel, closeAllPanels } from './js/ui/components/panels.js';
+import { handleImageError } from './js/ui/renderers/errorHandler.js';
 
-import { loadBlogContent, 
-         extractSummary, 
-         isBlogType, 
-         getCachedBlogContent, 
-         setCachedBlogContent 
-} from './js/blogUtils.js';
+// State
+import { getCachedBlogContent, setCachedBlogContent } from './js/state/cacheManager.js';
 
 const { createApp } = Vue;
 
@@ -57,6 +40,9 @@ createApp({
             showZoomPanel: false,
             showFilterPanel: false,
             showAddEventPanel: false,
+            showAnalysisPanel: false,
+            // analysisTab: 'overview', // Removed
+            hoveredCell: null,
             showTags: true,
             showLocation: true,
             showNote: true,
@@ -85,6 +71,11 @@ createApp({
                 event: null,
                 content: '',
                 renderedContent: ''
+            },
+            // 后端配置
+            backendConfig: {
+                enabled: false,
+                apiUrl: ''
             }
         };
     },
@@ -131,6 +122,101 @@ createApp({
                 }
             });
             return Array.from(tags).sort();
+        },
+        // 数据分析统计
+        analysisData() {
+            const blogEvents = this.events.filter(e => this.isBlogEvent(e));
+            const regularEvents = this.events.filter(e => !this.isBlogEvent(e));
+            
+            // 标签统计
+            const tagCount = {};
+            this.events.forEach(event => {
+                if (event.tags) {
+                    event.tags.forEach(tag => {
+                        tagCount[tag] = (tagCount[tag] || 0) + 1;
+                    });
+                }
+            });
+            const topTags = Object.entries(tagCount)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 10);
+            
+            // 新的热力图逻辑：按年-月统计
+            const heatmapMap = {}; // { year: { month (0-11): count } }
+            let minYear = new Date().getFullYear();
+            let maxYear = new Date().getFullYear();
+
+            // 如果有事件，先找到年份范围
+            if (this.events.length > 0) {
+                 const years = this.events.map(e => new Date(e.date).getFullYear()).filter(y => !isNaN(y));
+                 if (years.length > 0) {
+                     minYear = Math.min(...years);
+                     maxYear = Math.max(...years);
+                 }
+            }
+
+            // 初始化 map
+            for (let y = minYear; y <= maxYear; y++) {
+                heatmapMap[y] = Array(12).fill(null).map(() => ({ count: 0, tags: {}, blogs: 0 }));
+            }
+
+            this.events.forEach(event => {
+                const date = new Date(event.date);
+                if (!isNaN(date.getTime())) {
+                    const y = date.getFullYear();
+                    const m = date.getMonth();
+                    if (heatmapMap[y]) {
+                        const cell = heatmapMap[y][m];
+                        cell.count++;
+                        if (this.isBlogEvent(event)) {
+                            cell.blogs++;
+                        }
+                        if (event.tags && event.tags.length > 0) {
+                            event.tags.forEach(tag => {
+                                cell.tags[tag] = (cell.tags[tag] || 0) + 1;
+                            });
+                        }
+                    }
+                }
+            });
+
+            // 转换为数组，按年份倒序（最近的在上面）
+            const heatmapData = [];
+            for (let y = maxYear; y >= minYear; y--) {
+                heatmapData.push({
+                    year: y,
+                    months: heatmapMap[y].map(data => ({
+                        count: data.count,
+                        blogs: data.blogs,
+                        tags: data.tags
+                    }))
+                });
+            }
+
+             // 计算最大值用于颜色映射
+            let maxHeatValue = 0;
+            heatmapData.forEach(yData => {
+                yData.months.forEach(m => {
+                    if (m.count > maxHeatValue) maxHeatValue = m.count;
+                });
+            });
+
+            const uniqueTagsCount = new Set();
+            this.events.forEach(e => {
+                if (e.tags) e.tags.forEach(t => uniqueTagsCount.add(t));
+            });
+
+            return {
+                total: this.events.length,
+                blogs: blogEvents.length,
+                totalTags: uniqueTagsCount.size,
+                heatmapData, // 新结构
+                maxHeatValue: Math.max(maxHeatValue, 1), // 避免 0
+                timeSpan: this.sortedValidDates.length > 0 ? {
+                    start: this.sortedValidDates[0].toLocaleDateString('zh-CN'),
+                    end: this.sortedValidDates[this.sortedValidDates.length - 1].toLocaleDateString('zh-CN')
+                } : null
+            };
         },
         filteredEvents() {
             const whitelistTags = Object.keys(this.selectedTags).filter(tag => this.selectedTags[tag] === 'whitelist');
@@ -228,9 +314,27 @@ createApp({
                             document.documentElement.style.setProperty('--read-more-color', configData.config.blog.readMoreColor);
                         }
                     }
+                    // 加载后端配置
+                    if (configData.config.backend) {
+                        if (configData.config.backend.enabled !== undefined) {
+                            this.backendConfig.enabled = configData.config.backend.enabled;
+                        }
+                        if (configData.config.backend.apiUrl !== undefined) {
+                            this.backendConfig.apiUrl = configData.config.backend.apiUrl;
+                        }
+                    }
                 }
                 
-                const data = await loadYAMLData('./data/data.yaml');
+                // 根据配置选择数据源
+                let data;
+                if (this.backendConfig.enabled && this.backendConfig.apiUrl) {
+                    // 从后端API加载
+                    console.log('从后端API加载数据:', this.backendConfig.apiUrl);
+                    data = await loadDataFromAPI(this.backendConfig.apiUrl);
+                } else {
+                    // 从本地YAML加载
+                    data = await loadYAMLData('./data/data.yaml');
+                }
                 
                 if (data.events && Array.isArray(data.events)) {
                     const validEvents = validateEvents(data.events);
@@ -321,11 +425,24 @@ createApp({
             if (this.showAddEventPanel) {
                 this.showZoomPanel = false;
                 this.showFilterPanel = false;
+                this.showAnalysisPanel = false;
                 if (!this.newEvent.date) {
                     const today = new Date();
                     this.newEvent.date = today.toISOString().split('T')[0];
                 }
             }
+        },
+        toggleAnalysisPanel() {
+            this.showAnalysisPanel = !this.showAnalysisPanel;
+            if (this.showAnalysisPanel) {
+                this.showZoomPanel = false;
+                this.showFilterPanel = false;
+                this.showAddEventPanel = false;
+                this.analysisTab = 'overview';
+            }
+        },
+        switchAnalysisTab(tab) {
+            this.analysisTab = tab;
         },
         closeAllPanels() {
             const state = closeAllPanels();
@@ -362,16 +479,33 @@ createApp({
         removeTagFromNewEvent(tag) {
             this.newEvent.tags = this.newEvent.tags.filter(t => t !== tag);
         },
-        saveNewEvent() {
-            const result = saveEventFn(this.newEvent, this.events);
+        async saveNewEvent() {
+            const result = saveEventFn(this.newEvent, this.events, this.backendConfig);
             if (!result.success) {
                 alert(result.message);
                 return;
             }
-            this.events = result.events;
-            this.newEvent = resetNewEventForm();
-            this.showAddEventPanel = false;
-            alert(result.message);
+            
+            // 如果使用后端API
+            if (result.useBackend) {
+                try {
+                    const apiResult = await saveEventToAPI(this.backendConfig.apiUrl, result.event);
+                    // 保存成功后重新加载数据
+                    await this.loadData();
+                    this.newEvent = resetNewEventForm();
+                    this.showAddEventPanel = false;
+                    alert('事件已成功保存到后端服务！');
+                } catch (error) {
+                    console.error('保存到后端失败:', error);
+                    alert('保存到后端失败: ' + error.message);
+                }
+            } else {
+                // 本地模式
+                this.events = result.events;
+                this.newEvent = resetNewEventForm();
+                this.showAddEventPanel = false;
+                alert(result.message);
+            }
         },
         resetNewEventForm() {
             Object.assign(this, {
@@ -379,6 +513,22 @@ createApp({
                 newEventTagInput: '',
                 newTagColor: '#9fa8a3'
             });
+        },
+        
+        // 热力图颜色
+        getHeatmapColor(count) {
+            if (count === 0) return '#ebedf0';
+            if (count === 1) return '#c6e0d4';
+            if (count === 2) return '#9cc5af';
+            if (count <= 4) return '#6ba989';
+            return '#468863';
+        },
+        getHeatmapLevel(count) {
+            if (count === 0) return 0;
+            if (count === 1) return 1;
+            if (count === 2) return 2;
+            if (count <= 4) return 3;
+            return 4;
         },
         
         // 导出数据 - 使用dataManager模块
@@ -461,6 +611,25 @@ createApp({
             scrollToEvent(container, position, container.clientWidth);
         },
         
+        onHeatmapCellHover(year, monthIndex, data) {
+            if (data.count === 0) {
+                 this.hoveredCell = null;
+                 return;
+            }
+            this.hoveredCell = {
+                year,
+                month: monthIndex + 1,
+                ...data
+            };
+        },
+        onHeatmapCellLeave() {
+            this.hoveredCell = null;
+        },
+        
+        switchAnalysisTab(tab) {
+            this.analysisTab = tab;
+        },
+
         // Blog功能
         isBlogEvent(event) {
             return isBlogType(event);
@@ -501,9 +670,13 @@ createApp({
         },
         closeBlog() {
             this.currentBlog.visible = false;
-            this.currentBlog.event = null;
-            this.currentBlog.content = '';
-            this.currentBlog.renderedContent = '';
+            setTimeout(() => {
+                if (!this.currentBlog.visible) {
+                    this.currentBlog.event = null;
+                    this.currentBlog.content = '';
+                    this.currentBlog.renderedContent = '';
+                }
+            }, 300);
         },
     },
     mounted() {

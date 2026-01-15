@@ -1,0 +1,18 @@
+/* 缩放控制面板样式 */
+
+/* 缩放面板继承自 .control-panel */
+/* 特有样式在此定义 */
+
+.zoom-level {
+    text-align: center;
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--primary);
+    margin-bottom: 8px;
+}
+
+.hint {
+    font-size: 12px;
+    color: var(--text-light);
+    text-align: center;
+}

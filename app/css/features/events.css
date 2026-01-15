@@ -1,0 +1,47 @@
+/* 事件节点特有样式 */
+
+/* 卡片基础样式在 components/cards.css 中定义 */
+
+/* === 图片预览 === */
+.image-preview {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 400px;
+    max-width: 90vw;
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 8px;
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.2);
+    z-index: 1001;
+    pointer-events: none;
+    opacity: 0;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.image-preview.preview-above {
+    bottom: calc(100% + 40px);
+}
+
+.event-card:hover ~ .image-preview.preview-above {
+    opacity: 1;
+    bottom: calc(100% + 20px);
+}
+
+.image-preview.preview-below {
+    top: calc(100% + 40px);
+}
+
+.event-card:hover ~ .image-preview.preview-below {
+    opacity: 1;
+    top: calc(100% + 20px);
+}
+
+.image-preview img {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 8px;
+    max-height: 500px;
+    object-fit: cover;
+}

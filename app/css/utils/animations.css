@@ -1,0 +1,33 @@
+/* 动画和过渡效果 */
+
+/* === 面板进入/离开动画 === */
+.panel-enter-active, .panel-leave-active {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.panel-enter-from, .panel-leave-to {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+}
+
+/* === 淡入动画 === */
+@keyframes fadeIn {
+    from { 
+        opacity: 0; 
+        transform: translateY(4px); 
+    }
+    to { 
+        opacity: 1; 
+        transform: translateY(0); 
+    }
+}
+
+/* === 脉冲发光动画 === */
+@keyframes pulse-glow {
+    0%, 100% {
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    }
+    50% {
+        box-shadow: 0 2px 12px rgba(102, 126, 234, 0.5);
+    }
+}

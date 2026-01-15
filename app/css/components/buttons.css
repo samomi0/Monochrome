@@ -1,0 +1,293 @@
+/* 按钮组件样式 */
+
+/* === 浮动控制按钮 === */
+.floating-controls {
+    position: fixed;
+    top: 24px;
+    right: 24px;
+    display: flex;
+    gap: 12px;
+    z-index: 1000;
+}
+
+.floating-button {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: none;
+    background: var(--card-bg);
+    color: var(--primary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: var(--shadow-lg);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+}
+
+.floating-button:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(159, 168, 163, 0.25);
+}
+
+.floating-button.active {
+    background: var(--primary);
+    color: white;
+}
+
+.floating-button .badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: var(--accent);
+    color: white;
+    font-size: 11px;
+    font-weight: bold;
+    min-width: 20px;
+    height: 20px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 6px;
+}
+
+/* === 图标按钮 === */
+.icon-btn {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    border: 2px solid var(--primary);
+    background: transparent;
+    color: var(--primary);
+    font-size: 24px;
+    font-weight: 300;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.icon-btn:hover {
+    background: var(--primary);
+    color: white;
+}
+
+/* === 切换按钮 === */
+.toggle-btn {
+    flex: 1;
+    min-width: 80px;
+    padding: 10px 12px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    background: var(--card-bg);
+    color: var(--text-dark);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.toggle-btn:hover {
+    border-color: var(--primary);
+    background: #f8f9fa;
+}
+
+.toggle-btn.active {
+    background: var(--primary);
+    color: white;
+    border-color: var(--primary);
+}
+
+.toggle-btn svg {
+    flex-shrink: 0;
+}
+
+/* === 添加标签按钮 === */
+.add-tag-btn {
+    padding: 12px 20px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.add-tag-btn:hover {
+    background: var(--secondary);
+}
+
+/* === 清除按钮 === */
+.clear-all-btn {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    background: #d4a5a5;
+    color: white;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.clear-all-btn:hover {
+    background: #c79090;
+    transform: translateY(-2px);
+}
+
+/* === 关闭按钮 === */
+.close-btn {
+    width: 32px;
+    height: 32px;
+    border: none;
+    background: transparent;
+    color: var(--text-light);
+    font-size: 32px;
+    line-height: 1;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.close-btn:hover {
+    color: var(--text-dark);
+    transform: rotate(90deg);
+}
+
+/* === 主要/次要按钮 === */
+.btn-primary,
+.btn-secondary {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 14px;
+}
+
+.btn-primary {
+    background: var(--primary);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: var(--secondary);
+    transform: translateY(-2px);
+}
+
+.btn-secondary {
+    background: #e2e8f0;
+    color: var(--text-dark);
+}
+
+.btn-secondary:hover {
+    background: #cbd5e1;
+}
+
+/* === 阅读全文按钮 === */
+.read-more-btn {
+    padding: 6px 14px;
+    background: var(--read-more-color, var(--accent));
+    color: white;
+    border: none;
+    border-radius: 16px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+    align-self: flex-end;
+    margin-top: 4px;
+}
+
+.read-more-btn:hover {
+    background: var(--secondary);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* === 删除标签按钮 === */
+.remove-tag {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0;
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.8;
+    transition: opacity 0.2s;
+}
+
+.remove-tag:hover {
+    opacity: 1;
+}
+
+/* === 视图切换按钮 === */
+.view-toggle-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    border: none;
+    border-radius: 24px;
+    background: #fff;
+    color: var(--primary);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.view-toggle-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(159, 168, 163, 0.2);
+    background: var(--primary);
+    color: white;
+}
+
+.view-toggle-btn svg {
+    color: currentColor;
+    transition: color 0.3s;
+}
+
+/* === Blog模态关闭按钮 === */
+.blog-modal-close {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    outline: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 20px;
+    transition: all 0.3s ease;
+}
+
+.blog-modal-close:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: rotate(90deg);
+}

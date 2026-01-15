@@ -1,0 +1,126 @@
+/* 暗黑模式样式覆盖 */
+
+/* === 变量覆盖 === */
+body.dark-mode {
+    --primary: #7a8580;
+    --secondary: #9d8a98;
+    --accent: #b38a8a;
+    --bg-gradient-1: #2a2826;
+    --bg-gradient-2: #3a3530;
+    --text-dark: #d0d0d0;
+    --text-light: #a0a0a0;
+    --card-bg: #3d3a37;        /* 卡片背景 - 最亮 */
+    --container-bg: #35322f;   /* 容器背景 - 中间层 */
+    --panel-bg: #2d2b28;       /* 面板背景 - 较暗 */
+    --input-bg: #45423f;       /* 输入框背景 - 更亮一点 */
+    --footer-bg: #33302d;      /* 卡片footer区域 - 比卡片主体暗 */
+    --minimap-bg: rgba(61, 58, 55, 0.95);  /* 缩略图背景 */
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+/* === 数据分析面板 === */
+.dark-mode .analysis-header,
+.dark-mode .analysis-body {
+    background: #1f2937;
+    border-color: #374151;
+}
+
+.dark-mode .view-toggle-btn {
+    background: #1f2937;
+    color: #e5e7eb;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.dark-mode .view-toggle-btn:hover {
+    background: #374151;
+    color: white;
+}
+
+.dark-mode .view-toggle-btn svg {
+    color: currentColor;
+}
+
+.dark-mode .divider-text {
+    color: #9ca3af;
+}
+
+.dark-mode .divider-text::after {
+    background: #374151;
+}
+
+.dark-mode .segmented-control {
+    background: #111827;
+}
+
+.dark-mode .segment-btn {
+    color: #9ca3af;
+}
+
+.dark-mode .segment-btn.active {
+    background: #374151;
+    color: #e5e7eb;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+
+.dark-mode .segment-btn:hover:not(.active) {
+    color: #d1d5db;
+}
+
+.dark-mode .stat-card {
+    background: #1f2937;
+    border-color: #374151;
+}
+
+.dark-mode .stat-value {
+    color: #e5e7eb;
+}
+
+.dark-mode .time-range {
+    background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+}
+
+.dark-mode .time-range-value {
+    color: #e5e7eb;
+}
+
+.dark-mode .tag-name,
+.dark-mode .year-label,
+.dark-mode .year-row-label {
+    color: #e5e7eb;
+}
+
+.dark-mode .tag-count {
+    background: #374151;
+    color: #9ca3af;
+}
+
+.dark-mode .bar-container {
+    background: #374151;
+}
+
+.dark-mode .heatmap-cell-monthly {
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark-mode .legend-box {
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark-mode .heatmap-year-row.year-gap::after {
+    background: rgba(255,255,255,0.05);
+}
+
+.dark-mode .analysis-tabs {
+    border-bottom-color: #374151;
+}
+
+.dark-mode .analysis-tab {
+    color: #9ca3af;
+}
+
+.dark-mode .analysis-tab:hover {
+    color: #e5e7eb;
+    background: rgba(255, 255, 255, 0.05);
+}

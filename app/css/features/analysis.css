@@ -1,0 +1,400 @@
+/* 数据分析面板样式 */
+
+.analysis-modal {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    padding: 20px;
+}
+
+.analysis-content {
+    width: 90%;
+    max-width: 1200px; /* 增加宽度以适应双栏布局 */
+    height: 90vh;
+    border-radius: 20px;
+    box-shadow: var(--shadow-lg);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    background: var(--card-bg);
+}
+
+/* === Header 分段控制器 === */
+.analysis-header {
+    background: linear-gradient(to right, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.95));
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 32px;
+    border-bottom: none;
+    flex-shrink: 0;
+    position: relative; /* Ensure meaningful context for absolute children if needed, though usually standard flow is fine */
+}
+
+/* Close button positioning to match other modals top-right */
+.analysis-header .close-btn {
+    position: absolute;
+    right: 24px;
+    top: 24px;
+    padding: 0;
+    margin: 0;
+}
+
+.analysis-header h3 {
+    font-size: 20px;
+    color: var(--text-dark);
+    margin: 0;
+}
+
+/* === Tab内容区 === */
+.analysis-body {
+    padding: 30px 40px;
+    flex: 1;
+    overflow-y: auto;
+    background: #fff;
+    display: flex; /* Flex layout fo split view */
+}
+
+/* === 布局 === */
+.split-view {
+    display: flex;
+    gap: 40px;
+    height: 100%;
+    width: 100%;
+}
+
+.analysis-left {
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 20px;
+}
+
+.analysis-right {
+    width: 320px;
+    flex-shrink: 0;
+    background: var(--footer-bg);
+    border-radius: 16px;
+    padding: 0;
+    overflow-y: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.analysis-overview {
+    padding: 24px;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+    background: rgba(255,255,255,0.5);
+}
+
+.analysis-details {
+    padding: 24px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+
+/* === 热力图重构 === */
+.heatmap-container {
+    display: flex;
+    flex-direction: column;
+}
+
+.heatmap-grid-monthly {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.heatmap-header-row {
+    display: grid;
+    grid-template-columns: 50px repeat(12, 1fr);
+    gap: 6px;
+    margin-bottom: 8px;
+    padding-left: 0; /* Reset padding, as grid handles it */
+}
+
+.month-header-label {
+    text-align: center;
+    font-size: 13px;
+    color: var(--text-light);
+    font-weight: 500;
+}
+
+.heatmap-year-row {
+    display: grid;
+    grid-template-columns: 50px 1fr;
+    align-items: center;
+    gap: 6px; /* Matched to header gap */
+}
+
+.heatmap-year-row.year-gap {
+    margin-bottom: 24px;
+    position: relative;
+}
+
+.heatmap-year-row.year-gap::after {
+    content: '';
+    position: absolute;
+    bottom: -12px;
+    left: 4px;
+    right: 4px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(0,0,0,0.05), transparent);
+}
+
+.year-row-label {
+    width: auto;
+    font-size: 14px;
+    color: var(--text-light);
+    font-weight: 600;
+    text-align: right;
+    padding-right: 12px;
+    opacity: 1;
+    font-family: inherit;
+}
+
+.year-row-cells {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 6px;
+}
+
+.heatmap-cell-monthly {
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 4px;
+    background: #f0f0f0; /* Default empty color */
+    border: none;
+    transition: all 0.2s ease;
+    cursor: default;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.heatmap-cell-monthly.has-data {
+    cursor: pointer;
+}
+
+.heatmap-cell-monthly:hover {
+    transform: scale(1.1);
+    z-index: 10;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    border-radius: 4px;
+}
+
+.cell-count {
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    opacity: 0;
+    transition: opacity 0.2s;
+    pointer-events: none;
+}
+
+.heatmap-cell-monthly:hover .cell-count {
+    opacity: 1;
+}
+
+/* === 动态信息面板 === */
+.info-panel {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 默认视图 */
+.info-panel.default-view .info-group {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 16px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.03);
+    text-align: center;
+}
+
+.info-label {
+    font-size: 14px;
+    color: var(--text-light);
+    margin-bottom: 8px;
+}
+
+.info-value {
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+/* 详细视图 */
+.detail-header {
+    border-bottom: 2px solid rgba(0,0,0,0.05);
+    padding-bottom: 16px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.detail-date {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text-dark);
+}
+
+.detail-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.mini-stat {
+    background: white;
+    padding: 16px;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+}
+
+.mini-stat .label {
+    display: block;
+    font-size: 12px;
+    color: var(--text-light);
+    margin-bottom: 4px;
+}
+
+.mini-stat .value {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text-dark);
+}
+
+.tags-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-light);
+    margin-bottom: 12px;
+}
+
+.tags-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.mini-tag {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid currentColor;
+    border-radius: 20px;
+    padding: 4px 10px;
+    font-size: 12px;
+    font-weight: 500;
+    background: white;
+}
+
+.tag-count-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 9px;
+    color: white;
+    font-size: 10px;
+    margin-left: 6px;
+    padding: 0 4px;
+    line-height: 1;
+}
+
+.empty-state-hint {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-light);
+    text-align: center;
+    opacity: 0.6;
+    padding-top: 40px;
+}
+
+.hint-icon {
+    margin-bottom: 16px;
+    color: var(--text-light);
+}
+
+/* === Dark Mode Adjustments === */
+.dark-mode .analysis-content {
+    background: var(--card-bg);
+    border-color: var(--panel-bg);
+}
+
+.dark-mode .analysis-header {
+    background: var(--card-bg);
+    border-bottom: none;
+}
+
+.dark-mode .analysis-header h3 {
+    color: var(--text-dark);
+}
+
+.dark-mode .analysis-body {
+    background: var(--card-bg);
+}
+
+.dark-mode .analysis-right {
+    background: var(--container-bg);
+}
+
+.dark-mode .analysis-overview {
+    background: rgba(0, 0, 0, 0.2);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.dark-mode .info-panel.default-view .info-group,
+.dark-mode .mini-stat,
+.dark-mode .mini-tag {
+    background: var(--panel-bg);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    color: var(--text-dark);
+    border: 1px solid rgba(255,255,255,0.05);
+}
+
+.dark-mode .info-label,
+.dark-mode .detail-date,
+.dark-mode .tags-title,
+.dark-mode .label,
+.dark-mode .year-row-label {
+    color: var(--text-light);
+}
+
+.dark-mode .info-value {
+    color: var(--text-dark); /* Ensure high contrast */
+}
+
+.dark-mode .value {
+    color: var(--text-dark);
+}
+
+.dark-mode .heatmap-cell-monthly {
+    background: var(--input-bg);
+}
+
+.dark-mode .empty-state-hint {
+    color: var(--text-light);
+    opacity: 0.6;
+}
+
+.dark-mode .heatmap-year-row.year-gap::after {
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+}

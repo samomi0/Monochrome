@@ -1,8 +1,32 @@
 /* 主样式文件 - 导入所有模块 */
-@import url('./base.css');
-@import url('./controls.css');
-@import url('./timeline.css');
-@import url('./events.css');
-@import url('./responsive.css');
-@import url('./blog.css');
 
+/* === Base === */
+@import url('./base/variables.css');
+@import url('./base/reset.css');
+@import url('./base/dark-mode.css');
+
+/* === Components === */
+@import url('./components/buttons.css');
+@import url('./components/inputs.css');
+@import url('./components/tags.css');
+@import url('./components/cards.css');
+@import url('./components/modals.css');
+@import url('./components/badges.css');
+
+/* === Features === */
+@import url('./features/timeline.css');
+@import url('./features/minimap.css');
+@import url('./features/events.css');
+@import url('./features/blog.css');
+@import url('./features/analysis.css');
+
+/* === Panels === */
+@import url('./panels/zoom-panel.css');
+@import url('./panels/filter-panel.css');
+@import url('./panels/add-event-panel.css');
+
+/* === Utils === */
+@import url('./utils/animations.css');
+
+/* === Responsive === */
+@import url('./responsive.css');

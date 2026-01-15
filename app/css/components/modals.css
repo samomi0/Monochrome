@@ -1,0 +1,108 @@
+/* 模态框和面板基础样式 */
+
+/* === 控制面板 === */
+.control-panel {
+    position: fixed;
+    top: 92px;
+    right: 24px;
+    background: var(--panel-bg);
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: var(--shadow-lg);
+    z-index: 999;
+    min-width: 300px;
+}
+
+.control-panel h3 {
+    color: var(--text-dark);
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 20px;
+}
+
+.control-panel h4 {
+    font-size: 14px;
+    color: var(--text-light);
+    margin-bottom: 12px;
+    font-weight: 500;
+}
+
+/* === 模态框基础 === */
+.add-event-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1100;
+    padding: 20px;
+}
+
+.modal-content {
+    background: var(--card-bg);
+    border-radius: 20px;
+    box-shadow: var(--shadow-lg);
+    max-width: 600px;
+    width: 100%;
+    max-height: 90vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-header {
+    padding: 24px;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+.modal-header h3 {
+    color: var(--text-dark);
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0;
+    flex: 1;
+}
+
+.modal-body {
+    padding: 24px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.modal-footer {
+    padding: 20px 24px;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+/* === 分割线 === */
+.divider {
+    height: 1px;
+    background: #e2e8f0;
+    margin: 16px 0;
+}
+
+/* === 提示区域 === */
+.hint {
+    font-size: 12px;
+    color: var(--text-light);
+    text-align: center;
+}
+
+.zoom-level {
+    text-align: center;
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--primary);
+    margin-bottom: 8px;
+}

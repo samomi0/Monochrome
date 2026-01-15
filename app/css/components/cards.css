@@ -1,0 +1,113 @@
+/* 卡片基础样式 */
+
+.event-card {
+    width: 300px;
+    background: var(--card-bg);
+    border-radius: 12px;
+    padding: 0;
+    margin-top: 24px;
+    box-shadow: 
+        0 1px 3px rgba(0, 0, 0, 0.06),
+        0 2px 8px rgba(0, 0, 0, 0.04);
+    transition: all 0.3s ease;
+    overflow: hidden;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    position: relative;
+    pointer-events: auto;
+}
+
+.event-card::before,
+.event-card::after {
+    display: none;
+}
+
+.card-header,
+.event-title,
+.event-subtitle,
+.event-content,
+.event-footer {
+    overflow: hidden;
+}
+
+.event-card:hover,
+.event-dot:hover ~ .event-card {
+    transform: translateY(-4px);
+    box-shadow: 
+        0 4px 12px rgba(0, 0, 0, 0.08),
+        0 8px 24px rgba(0, 0, 0, 0.06);
+    border-color: var(--primary);
+}
+
+.card-header {
+    background: linear-gradient(in oklch 135deg, var(--primary), var(--secondary));
+    padding: 16px 20px;
+    position: relative;
+    z-index: 2;
+}
+
+.event-date {
+    color: white;
+    font-weight: 600;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.event-date svg {
+    opacity: 0.9;
+}
+
+.event-title {
+    color: var(--text-dark);
+    font-size: 20px;
+    font-weight: 700;
+    margin: 16px 20px 8px;
+    line-height: 1.4;
+    position: relative;
+    z-index: 2;
+}
+
+.event-subtitle {
+    color: var(--text-light);
+    font-size: 14px;
+    margin: 0 20px 12px;
+    font-weight: 500;
+    position: relative;
+    z-index: 2;
+}
+
+.event-content {
+    color: var(--text-dark);
+    font-size: 14px;
+    line-height: 1.7;
+    margin: 0 20px 16px;
+    position: relative;
+    z-index: 2;
+}
+
+.event-footer {
+    padding: 16px 20px;
+    background: var(--footer-bg);
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+    position: relative;
+    z-index: 2;
+}
+
+.event-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--text-light);
+}
+
+.meta-item svg {
+    flex-shrink: 0;
+}

@@ -1,6 +1,6 @@
-/* Blog相关样式 */
+/* Blog功能样式 */
 
-/* Blog卡片特殊样式 */
+/* === Blog卡片特殊样式 === */
 .event-card.blog-card {
     background: var(--card-bg);
 }
@@ -9,38 +9,7 @@
     background: linear-gradient(in oklch 135deg, var(--accent), var(--secondary));
 }
 
-/* Blog标记 - 位于右上角 */
-.blog-badge {
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    width: 32px;
-    height: 32px;
-    background: var(--card-bg);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-    z-index: 10;
-    color: var(--primary);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* 当同时有图片标记时，blog标记左移 */
-.blog-badge.has-image-badge {
-    right: 52px;
-}
-
-.event-card:hover .blog-badge {
-    transform: scale(1.1);
-    background: var(--card-bg);
-    box-shadow: 0 4px 12px rgba(159, 168, 163, 0.3);
-}
-
-/* Blog摘要样式 */
-
-/* Blog摘要样式 */
+/* === Blog摘要 === */
 .blog-summary {
     color: var(--text-dark);
     font-size: 14px;
@@ -52,7 +21,7 @@
     overflow: hidden;
 }
 
-/* Blog卡片footer样式 */
+/* === Blog卡片footer === */
 .event-footer.blog-footer {
     display: flex;
     flex-direction: column;
@@ -62,31 +31,7 @@
     margin-bottom: 8px;
 }
 
-/* 阅读全文按钮 - 位于右下角 */
-.read-more-btn {
-    padding: 6px 14px;
-    background: var(--read-more-color, var(--accent));
-    color: white;
-    border: none;
-    border-radius: 16px;
-    cursor: pointer;
-    font-size: 12px;
-    transition: all 0.3s ease;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    white-space: nowrap;
-    align-self: flex-end;
-    margin-top: 4px;
-}
-
-.read-more-btn:hover {
-    background: var(--secondary);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-}
-
-/* Blog模态弹窗 */
+/* === Blog模态弹窗 === */
 .blog-modal {
     position: fixed;
     top: 0;
@@ -153,33 +98,13 @@
     opacity: 0.9;
 }
 
-.blog-modal-close {
-    background: rgba(255, 255, 255, 0.2);
-    border: none;
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    font-size: 20px;
-    transition: all 0.3s ease;
-}
-
-.blog-modal-close:hover {
-    background: rgba(255, 255, 255, 0.3);
-    transform: rotate(90deg);
-}
-
 .blog-modal-body {
     padding: 30px;
     overflow-y: auto;
     flex: 1;
 }
 
-/* Markdown内容样式 */
+/* === Markdown内容样式 === */
 .markdown-content {
     font-size: 16px;
     line-height: 1.8;
@@ -303,7 +228,7 @@
     font-weight: 600;
 }
 
-/* 响应式 */
+/* === 响应式 === */
 @media (max-width: 768px) {
     .blog-modal-content {
         width: 95%;

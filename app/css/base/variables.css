@@ -1,0 +1,30 @@
+/* CSS 变量定义 */
+
+:root {
+    /* === 颜色系统 - 莫兰迪色系 === */
+    /* 主色调 */
+    --primary: #9fa8a3;
+    --secondary: #c7b3be;
+    --accent: #d4a5a5;
+    
+    /* 背景渐变 */
+    --bg-gradient-1: #d4cfc9;
+    --bg-gradient-2: #c9bdb2;
+    
+    /* 文字颜色 */
+    --text-dark: #5a5a5a;
+    --text-light: #8c8c8c;
+    
+    /* 组件背景 */
+    --card-bg: #ffffff;
+    --container-bg: #ffffff;
+    --panel-bg: #ffffff;
+    --input-bg: #ffffff;
+    --footer-bg: #f9f7f4;      /* 卡片footer区域 - 米黄色 */
+    --minimap-bg: rgba(255, 255, 255, 0.95);
+    
+    /* 阴影系统 */
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.1);
+}

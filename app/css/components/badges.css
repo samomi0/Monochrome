@@ -1,0 +1,83 @@
+/* 徽章组件样式 */
+
+/* === 图片徽章 === */
+.image-badge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 32px;
+    height: 32px;
+    background: var(--card-bg);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    z-index: 10;
+    color: var(--primary);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.event-card:hover .image-badge {
+    transform: scale(1.1);
+    background: var(--card-bg);
+    box-shadow: 0 4px 12px rgba(159, 168, 163, 0.3);
+}
+
+/* === Blog徽章 === */
+.blog-badge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 32px;
+    height: 32px;
+    background: var(--card-bg);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    z-index: 10;
+    color: var(--primary);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.blog-badge.has-image-badge {
+    right: 52px;
+}
+
+.event-card:hover .blog-badge {
+    transform: scale(1.1);
+    background: var(--card-bg);
+    box-shadow: 0 4px 12px rgba(159, 168, 163, 0.3);
+}
+
+/* === 后端服务徽章 === */
+.backend-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 12px;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.backend-badge svg {
+    width: 14px;
+    height: 14px;
+}
+
+@keyframes pulse-glow {
+    0%, 100% {
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+    }
+    50% {
+        box-shadow: 0 2px 12px rgba(102, 126, 234, 0.5);
+    }
+}

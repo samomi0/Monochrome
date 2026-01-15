@@ -1,38 +1,51 @@
-// 时间轴位置计算工具
+// 时间轴核心模块 - 位置计算和刻度生成
+import { DEFAULT_MARGIN, BASE_MONTH_SPACING, MAX_OFFSET_RATIO, MS_PER_DAY } from '../constants.js';
+import { getMonthStart, getDaysInMonth } from '../utils/dateUtils.js';
 
-// 计算月份刻度位置
+/**
+ * 计算月份刻度位置
+ * @param {string|Date} date - 日期
+ * @param {Object} timelineRange - 时间轴范围 {start, end}
+ * @param {number} zoomLevel - 缩放级别
+ * @returns {number} 位置(像素)
+ */
 export function getMonthPosition(date, timelineRange, zoomLevel) {
     const targetDate = new Date(date);
     if (isNaN(targetDate.getTime())) {
         console.warn('无效日期:', date);
-        return 400;
+        return DEFAULT_MARGIN;
     }
     
-    const targetMonth = new Date(targetDate.getFullYear(), targetDate.getMonth(), 1);
+    const targetMonth = getMonthStart(targetDate);
     const { start } = timelineRange;
     
-    const leftMargin = 400;
-    const monthSpacing = 200 * zoomLevel;
+    const monthSpacing = BASE_MONTH_SPACING * zoomLevel;
     
     const monthsDiff = (targetMonth.getFullYear() - start.getFullYear()) * 12 + 
                       (targetMonth.getMonth() - start.getMonth());
     
-    return leftMargin + (monthsDiff * monthSpacing);
+    return DEFAULT_MARGIN + (monthsDiff * monthSpacing);
 }
 
-// 计算事件在时间轴上的位置
+/**
+ * 计算事件在时间轴上的位置
+ * @param {string|Date} date - 事件日期
+ * @param {Object} timelineRange - 时间轴范围 {start, end}
+ * @param {number} zoomLevel - 缩放级别
+ * @returns {number} 位置(像素)
+ */
 export function getEventPosition(date, timelineRange, zoomLevel) {
     const eventDate = new Date(date);
     if (isNaN(eventDate.getTime())) {
         console.warn('无效日期:', date);
-        return 400;
+        return DEFAULT_MARGIN;
     }
     
     const basePosition = getMonthPosition(eventDate, timelineRange, zoomLevel);
     
     const year = eventDate.getFullYear();
     const month = eventDate.getMonth();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const daysInMonth = getDaysInMonth(year, month);
     const dayOfMonth = eventDate.getDate();
     
     if (dayOfMonth < 1 || dayOfMonth > daysInMonth) {
@@ -40,7 +53,7 @@ export function getEventPosition(date, timelineRange, zoomLevel) {
         return basePosition;
     }
     
-    const monthSpacing = 200 * zoomLevel;
+    const monthSpacing = BASE_MONTH_SPACING * zoomLevel;
     
     let dayRatio;
     if (daysInMonth === 1 || dayOfMonth === 1) {
@@ -49,13 +62,19 @@ export function getEventPosition(date, timelineRange, zoomLevel) {
         dayRatio = (dayOfMonth - 1) / (daysInMonth - 1);
     }
     
-    const maxOffsetRange = monthSpacing * 0.8;
+    const maxOffsetRange = monthSpacing * MAX_OFFSET_RATIO;
     const offset = dayRatio * maxOffsetRange;
     
     return basePosition + offset;
 }
 
-// 计算圆点的垂直偏移
+/**
+ * 计算圆点的垂直偏移
+ * @param {string|Date} eventDate - 事件日期
+ * @param {boolean} isAboveLine - 是否在时间轴上方
+ * @param {Array<Date>} sortedValidDates - 排序后的有效日期数组
+ * @returns {number} 垂直偏移量(像素)
+ */
 export function getDotOffset(eventDate, isAboveLine, sortedValidDates) {
     const currentDate = new Date(eventDate);
     if (isNaN(currentDate.getTime())) {
@@ -72,7 +91,6 @@ export function getDotOffset(eventDate, isAboveLine, sortedValidDates) {
     if (currentIndex === -1) return 50;
     
     let daysDiff = 0;
-    const MS_PER_DAY = 1000 * 60 * 60 * 24;
     
     if (isAboveLine && currentIndex > 0) {
         daysDiff = (currentDate - dates[currentIndex - 1]) / MS_PER_DAY;
@@ -90,33 +108,13 @@ export function getDotOffset(eventDate, isAboveLine, sortedValidDates) {
     return offset;
 }
 
-// 格式化刻度标签
-export function formatTickLabel(date, type) {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    
-    if (type === 'event') {
-        return `${year}-${month}`;
-    }
-    
-    return `${year}-${month}`;
-}
-
-// 日期格式化
-export function formatDate(dateString) {
-    const date = new Date(dateString);
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-}
-
-// 获取事件在原始数组中的索引
-export function getOriginalIndex(event, events) {
-    return events.findIndex(e => e.date === event.date && e.title === event.title);
-}
-
-// 生成时间刻度
+/**
+ * 生成时间刻度
+ * @param {Array} events - 事件数组
+ * @param {Object} timelineRange - 时间轴范围 {start, end}
+ * @param {number} zoomLevel - 缩放级别
+ * @returns {Array} 刻度数组
+ */
 export function generateTicks(events, timelineRange, zoomLevel) {
     const ticks = [];
     const { start, end } = timelineRange;
@@ -148,41 +146,12 @@ export function generateTicks(events, timelineRange, zoomLevel) {
     return ticks.sort((a, b) => a.x - b.x);
 }
 
-// 计算日期范围
-export function calculateDateRange(events) {
-    if (events.length === 0) {
-        const now = new Date();
-        return {
-            min: new Date(now.getFullYear(), now.getMonth(), 1),
-            max: new Date(now.getFullYear(), now.getMonth(), 1)
-        };
-    }
-    
-    const dates = events
-        .map(e => new Date(e.date))
-        .filter(date => !isNaN(date.getTime()))
-        .sort((a, b) => a - b);
-    
-    if (dates.length === 0) {
-        const now = new Date();
-        return {
-            min: new Date(now.getFullYear(), now.getMonth(), 1),
-            max: new Date(now.getFullYear(), now.getMonth(), 1)
-        };
-    }
-    
-    return {
-        min: dates[0],
-        max: dates[dates.length - 1]
-    };
+/**
+ * 获取事件在原始数组中的索引
+ * @param {Object} event - 事件对象
+ * @param {Array} events - 事件数组
+ * @returns {number} 索引
+ */
+export function getOriginalIndex(event, events) {
+    return events.findIndex(e => e.date === event.date && e.title === event.title);
 }
-
-// 计算缩放相关
-export function zoomIn(currentZoomLevel) {
-    return currentZoomLevel < 10 ? currentZoomLevel + 0.5 : currentZoomLevel;
-}
-
-export function zoomOut(currentZoomLevel) {
-    return currentZoomLevel > 0.5 ? currentZoomLevel - 0.5 : currentZoomLevel;
-}
-

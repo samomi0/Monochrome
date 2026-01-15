@@ -1,0 +1,8 @@
+/* 新增事件面板样式 */
+
+/* 新增事件面板继承自 .add-event-modal 和 .modal-content */
+/* 此文件包含特定于新增事件的样式 */
+
+/* 表单组样式已在 components/inputs.css 中定义 */
+/* 按钮样式已在 components/buttons.css 中定义 */
+/* 标签相关已在 components/tags.css 中定义 */
