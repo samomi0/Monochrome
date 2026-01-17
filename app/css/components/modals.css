@@ -40,6 +40,7 @@
     justify-content: center;
     z-index: 1100;
     padding: 20px;
+    user-select: auto;
 }
 
 .modal-content {
@@ -52,6 +53,7 @@
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    user-select: auto;
 }
 
 .modal-header {

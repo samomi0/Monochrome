@@ -28,6 +28,8 @@
     background: var(--input-bg);
     transition: all 0.2s;
     font-family: inherit;
+    user-select: auto;
+    pointer-events: auto;
 }
 
 .form-input:focus,
@@ -55,6 +57,8 @@
     border-radius: 8px;
     cursor: pointer;
     transition: all 0.2s;
+    user-select: auto;
+    pointer-events: auto;
 }
 
 .form-color:hover {
