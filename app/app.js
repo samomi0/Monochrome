@@ -76,7 +76,9 @@ createApp({
             backendConfig: {
                 enabled: false,
                 apiUrl: ''
-            }
+            },
+            // 连续新增模式
+            continuousAdd: false
         };
     },
     computed: {
@@ -480,7 +482,7 @@ createApp({
             this.newEvent.tags = this.newEvent.tags.filter(t => t !== tag);
         },
         async saveNewEvent() {
-            const result = saveEventFn(this.newEvent, this.events, this.backendConfig);
+            const result = saveEventFn(this.newEvent, this.events, this.backendConfig, this.tagColors);
             if (!result.success) {
                 alert(result.message);
                 return;
@@ -489,12 +491,21 @@ createApp({
             // 如果使用后端API
             if (result.useBackend) {
                 try {
-                    const apiResult = await saveEventToAPI(this.backendConfig.apiUrl, result.event);
+                    const apiResult = await saveEventToAPI(this.backendConfig.apiUrl, result.event, result.tagColors);
                     // 保存成功后重新加载数据
                     await this.loadData();
-                    this.newEvent = resetNewEventForm();
-                    this.showAddEventPanel = false;
-                    alert('事件已成功保存到后端服务！');
+                    
+                    // 连续新增模式
+                    if (this.continuousAdd) {
+                        // 清空表单，保持弹窗打开
+                        this.newEvent = resetNewEventForm();
+                        this.newEventTagInput = '';
+                        this.newTagColor = '#9fa8a3';
+                    } else {
+                        // 正常模式：关闭弹窗
+                        this.newEvent = resetNewEventForm();
+                        this.showAddEventPanel = false;
+                    }
                 } catch (error) {
                     console.error('保存到后端失败:', error);
                     alert('保存到后端失败: ' + error.message);
@@ -502,9 +513,18 @@ createApp({
             } else {
                 // 本地模式
                 this.events = result.events;
-                this.newEvent = resetNewEventForm();
-                this.showAddEventPanel = false;
-                alert(result.message);
+                
+                // 连续新增模式
+                if (this.continuousAdd) {
+                    // 清空表单，保持弹窗打开
+                    this.newEvent = resetNewEventForm();
+                    this.newEventTagInput = '';
+                    this.newTagColor = '#9fa8a3';
+                } else {
+                    // 正常模式：关闭弹窗
+                    this.newEvent = resetNewEventForm();
+                    this.showAddEventPanel = false;
+                }
             }
         },
         resetNewEventForm() {

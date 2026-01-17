@@ -84,7 +84,18 @@
     border-top: 1px solid #e2e8f0;
     display: flex;
     gap: 12px;
-    justify-content: flex-end;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.footer-left {
+    display: flex;
+    align-items: center;
+}
+
+.footer-right {
+    display: flex;
+    gap: 12px;
 }
 
 /* === 分割线 === */

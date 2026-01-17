@@ -253,8 +253,23 @@
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button @click="resetNewEventForm" class="btn-secondary">重置</button>
-                        <button @click="saveNewEvent" class="btn-primary">保存事件</button>
+                        <div class="footer-left">
+                            <button 
+                                class="toggle-btn" 
+                                :class="{ active: continuousAdd }"
+                                @click="continuousAdd = !continuousAdd"
+                                type="button"
+                            >
+                                <svg viewBox="0 0 24 24" width="18" height="18">
+                                    <path fill="currentColor" d="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z"/>
+                                </svg>
+                                <span>连续新增</span>
+                            </button>
+                        </div>
+                        <div class="footer-right">
+                            <button @click="resetNewEventForm" class="btn-secondary">重置</button>
+                            <button @click="saveNewEvent" class="btn-primary">保存事件</button>
+                        </div>
                     </div>
                 </div>
             </div>

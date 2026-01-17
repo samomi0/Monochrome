@@ -21,15 +21,19 @@ export async function loadDataFromAPI(apiUrl) {
  * 向后端API保存事件
  * @param {string} apiUrl - API基础URL
  * @param {Object} eventData - 事件数据对象
+ * @param {Object} tagColors - 标签颜色映射（可选）
  * @returns {Promise<Object>} API响应结果
  */
-export async function saveEventToAPI(apiUrl, eventData) {
+export async function saveEventToAPI(apiUrl, eventData, tagColors = null) {
+    // 如果提供了tagColors，合并到eventData中
+    const payload = tagColors ? { ...eventData, tagColors } : eventData;
+    
     const response = await fetch(`${apiUrl}/api/events`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify(eventData)
+        body: JSON.stringify(payload)
     });
     
     if (!response.ok) {
