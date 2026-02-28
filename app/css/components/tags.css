@@ -123,3 +123,24 @@
     font-size: 13px;
     font-weight: 500;
 }
+
+/* === 标签筛选过渡效果 === */
+.event-node.filtered-out {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+.event-node.filtered-out .event-card {
+    transform: scale(0.9);
+}
+
+.event-node.filtered-in {
+    opacity: 1;
+    pointer-events: auto;
+    transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+.event-node.filtered-in .event-card {
+    transform: scale(1);
+}

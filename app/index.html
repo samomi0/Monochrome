@@ -392,7 +392,17 @@
 
         <!-- 时间轴容器 -->
         <div class="timeline-container" ref="timelineContainer">
-            <div class="timeline" 
+            <!-- 骨架屏加载态 -->
+            <div v-if="events.length === 0" class="timeline" style="width: 2000px; display: flex; align-items: center; padding: 0 400px; gap: 120px;">
+                <div v-for="n in 5" :key="'skeleton-'+n" class="skeleton-card" :style="{ animationDelay: (n * 0.15) + 's' }">
+                    <div class="skeleton skeleton-header"></div>
+                    <div class="skeleton skeleton-title"></div>
+                    <div class="skeleton skeleton-text"></div>
+                    <div class="skeleton skeleton-text short"></div>
+                    <div class="skeleton skeleton-footer"></div>
+                </div>
+            </div>
+            <div v-else class="timeline" 
                 :style="{ width: timelineWidth + 'px' }" 
                 ref="timeline">
                 
@@ -440,7 +450,7 @@
                     <g v-for="tick in ticks" :key="tick.date">
                         <!-- 普通刻度线 -->
                         <line 
-                            v-if="!tick.isTimeJump"
+                            v-if="!tick.isTimeJump && tick.showLabel !== false"
                             :x1="tick.x" 
                             :y1="tick.isEvent ? 45 : 50" 
                             :x2="tick.x" 
@@ -448,8 +458,20 @@
                             :stroke="tick.isEvent ? '#c7b3be' : '#e2d5d5'" 
                             :stroke-width="tick.isEvent ? 3 : 2"
                         />
+                        <!-- 隐藏标签的刻度用更短的线 -->
+                        <line 
+                            v-if="!tick.isTimeJump && tick.showLabel === false"
+                            :x1="tick.x" 
+                            :y1="55" 
+                            :x2="tick.x" 
+                            :y2="65" 
+                            stroke="#e2d5d5" 
+                            stroke-width="1"
+                            opacity="0.5"
+                        />
                         <!-- 文字标签 -->
                         <text 
+                            v-if="tick.showLabel !== false"
                             :x="tick.x" 
                             :y="tick.isEvent ? 95 : (tick.isTimeJump ? 100 : 90)" 
                             text-anchor="middle" 
@@ -458,7 +480,7 @@
                             :font-weight="tick.isEvent ? '600' : (tick.isTimeJump ? '700' : '400')"
                             font-family="system-ui, -apple-system, sans-serif"
                         >
-                            {{ tick.label }}
+                            {{ tick.semanticLabel || tick.label }}
                         </text>
                     </g>
                 </svg>
@@ -473,9 +495,10 @@
                         'below-line': getOriginalIndex(event) % 2 !== 0,
                         'has-image': event.image
                     }"
+                    :data-type="isBlogEvent(event) ? 'blog' : 'event'"
                     :style="{ left: getEventPosition(event.date) + 'px' }"
                 >
-                    <div class="event-dot"></div>
+                    <div class="event-dot" :class="{ 'today-dot': isToday(event.date) }"></div>
                     <div class="event-card" :class="{ 'blog-card': isBlogEvent(event) }">
                         <!-- Blog标记 -->
                         <div v-if="isBlogEvent(event)" class="blog-badge" :class="{ 'has-image-badge': event.image }">
@@ -602,7 +625,8 @@
                         </svg>
                     </button>
                 </div>
-                <div class="blog-modal-body">
+                <div class="blog-modal-body" ref="blogModalBody">
+                    <div class="blog-reading-progress" ref="blogProgressBar"></div>
                     <div v-if="currentBlog.loading" style="text-align: center; padding: 40px;">
                         <p>加载中...</p>
                     </div>

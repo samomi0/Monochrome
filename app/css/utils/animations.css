@@ -31,3 +31,139 @@
         box-shadow: 0 2px 12px rgba(102, 126, 234, 0.5);
     }
 }
+
+/* === 入场动画状态控制 === */
+
+/* 等待入场 — 通过 CSS class 控制不可见，不用内联 style */
+.entry-pending .event-card,
+.entry-pending .event-dot {
+    opacity: 0 !important;
+}
+
+/* 动画完成后的正常显示状态 */
+.entry-visible .event-card,
+.entry-visible .event-dot {
+    opacity: 1;
+}
+
+/* === 事件卡片入场动画 === */
+/* 不使用 forwards，动画结束后移除 class，元素回归自然状态 */
+.event-card.animate-in {
+    opacity: 1 !important;
+    animation: card-slide-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes card-slide-in {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* 上方卡片从上方滑入 */
+.above-line .event-card.animate-in {
+    animation-name: card-slide-in-above;
+}
+
+@keyframes card-slide-in-above {
+    from {
+        opacity: 0;
+        transform: translateY(-20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* === 圆点入场动画 === */
+/* 不使用 forwards，避免与 hover transition 冲突 */
+.event-dot.animate-in {
+    opacity: 1 !important;
+    animation: dot-pop-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes dot-pop-in {
+    from {
+        opacity: 0;
+        transform: scale(0);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* === 骨架屏加载态 === */
+.skeleton {
+    background: linear-gradient(
+        90deg,
+        var(--footer-bg) 25%,
+        var(--card-bg) 50%,
+        var(--footer-bg) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s ease-in-out infinite;
+    border-radius: 8px;
+}
+
+@keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+.skeleton-card {
+    width: 300px;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-top: 24px;
+}
+
+.skeleton-header {
+    height: 52px;
+}
+
+.skeleton-title {
+    height: 24px;
+    margin: 16px 20px 8px;
+    width: 60%;
+}
+
+.skeleton-text {
+    height: 14px;
+    margin: 0 20px 8px;
+    width: 80%;
+}
+
+.skeleton-text.short {
+    width: 50%;
+}
+
+.skeleton-footer {
+    height: 48px;
+    margin-top: 12px;
+}
+
+.skeleton-dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+/* === 博客阅读进度条 === */
+.blog-reading-progress {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 3px;
+    background: linear-gradient(in oklch 90deg, var(--accent), var(--secondary));
+    transition: width 0.1s linear;
+    z-index: 10;
+    border-radius: 0 2px 2px 0;
+    opacity: 0.9;
+}

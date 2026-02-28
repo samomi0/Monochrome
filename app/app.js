@@ -20,7 +20,9 @@ import { toggleTag, addTagToNewEvent as addTagFn } from './js/core/tag.js';
 // UI
 import { initDragScroll } from './js/ui/interactions/dragScroll.js';
 import { scrollToEnd, scrollToEvent } from './js/ui/interactions/navigation.js';
-import { zoomIn as zoomInFn, zoomOut as zoomOutFn } from './js/ui/interactions/zoom.js';
+import { zoomIn as zoomInFn, zoomOut as zoomOutFn, focalZoom, ZOOM_SEMANTICS } from './js/ui/interactions/zoom.js';
+import { initEntryAnimations } from './js/ui/interactions/entryAnimations.js';
+import { initBlogProgress } from './js/ui/interactions/blogProgress.js';
 import { updateMinimapViewport, updateMinimapPosition, getMinimapItemStyle } from './js/ui/components/minimap.js';
 import { togglePanel, closeAllPanels } from './js/ui/components/panels.js';
 import { handleImageError } from './js/ui/renderers/errorHandler.js';
@@ -54,6 +56,8 @@ createApp({
             globalClickListener: null,
             wheelListener: null,
             dragScrollCleanup: null,
+            entryAnimations: null,
+            blogProgressCleanup: null,
             minimap: {
                 isDragging: false,
                 viewportWidth: 0,
@@ -80,6 +84,16 @@ createApp({
             // 连续新增模式
             continuousAdd: false
         };
+    },
+    watch: {
+        // 筛选事件变化时刷新入场动画
+        filteredEvents() {
+            this.$nextTick(() => {
+                if (this.entryAnimations) {
+                    this.entryAnimations.refresh();
+                }
+            });
+        }
     },
     computed: {
         sortedValidDates() {
@@ -269,7 +283,13 @@ createApp({
             if (this.sortedValidDates.length === 0) {
                 return [];
             }
-            return generateTicks(this.events, this.timelineRange, this.zoomLevel);
+            const rawTicks = generateTicks(this.events, this.timelineRange, this.zoomLevel);
+            // 应用语义化缩放
+            return rawTicks.map(tick => ({
+                ...tick,
+                showLabel: ZOOM_SEMANTICS.shouldShowLabel(tick.date, this.zoomLevel),
+                semanticLabel: ZOOM_SEMANTICS.formatLabel(tick.date, this.zoomLevel)
+            }));
         }
     },
     methods: {
@@ -581,7 +601,15 @@ createApp({
         setupDragScroll() {
             const container = this.$refs.timelineContainer;
             if (container) {
-                this.dragScrollCleanup = initDragScroll(container);
+                this.dragScrollCleanup = initDragScroll(container, {
+                    getEventPositions: () => {
+                        return this.filteredEvents.map(event => 
+                            getEventPosition(event.date, this.timelineRange, this.zoomLevel)
+                        );
+                    },
+                    enableSnap: true,
+                    snapThreshold: 200
+                });
             }
         },
         updateMinimapViewport() {
@@ -687,9 +715,23 @@ createApp({
             // 使用marked渲染Markdown
             this.currentBlog.renderedContent = marked.parse(content);
             this.currentBlog.loading = false;
+            
+            // 初始化阅读进度条
+            this.$nextTick(() => {
+                const modalBody = this.$refs.blogModalBody;
+                const progressBar = this.$refs.blogProgressBar;
+                if (modalBody && progressBar) {
+                    this.blogProgressCleanup = initBlogProgress(modalBody, progressBar);
+                }
+            });
         },
         closeBlog() {
             this.currentBlog.visible = false;
+            // 清理进度条
+            if (this.blogProgressCleanup) {
+                this.blogProgressCleanup();
+                this.blogProgressCleanup = null;
+            }
             setTimeout(() => {
                 if (!this.currentBlog.visible) {
                     this.currentBlog.event = null;
@@ -697,6 +739,15 @@ createApp({
                     this.currentBlog.renderedContent = '';
                 }
             }, 300);
+        },
+        
+        // 判断事件是否为今天
+        isToday(dateStr) {
+            const eventDate = new Date(dateStr);
+            const today = new Date();
+            return eventDate.getFullYear() === today.getFullYear() &&
+                   eventDate.getMonth() === today.getMonth() &&
+                   eventDate.getDate() === today.getDate();
         },
     },
     mounted() {
@@ -713,6 +764,9 @@ createApp({
                 if (container) {
                     scrollToEnd(container);
                 }
+                // 初始化入场动画
+                this.entryAnimations = initEntryAnimations(this.$refs.timelineContainer);
+                this.entryAnimations.refresh();
             });
         });
         
@@ -721,10 +775,18 @@ createApp({
         this.wheelListener = (e) => {
             if (e.ctrlKey) {
                 e.preventDefault();
+                const oldZoom = this.zoomLevel;
                 if (e.deltaY < 0) {
-                    this.zoomIn();
+                    this.zoomLevel = zoomInFn(this.zoomLevel);
                 } else {
-                    this.zoomOut();
+                    this.zoomLevel = zoomOutFn(this.zoomLevel);
+                }
+                // 焦点缩放 - 以鼠标位置为中心
+                if (this.zoomLevel !== oldZoom) {
+                    const container = this.$refs.timelineContainer;
+                    focalZoom(container, e.clientX, oldZoom, this.zoomLevel, (z) => {
+                        return 400 + (this.totalMonths * 200 * z) + 400;
+                    });
                 }
             }
         };
@@ -761,6 +823,12 @@ createApp({
         }
         if (this.dragScrollCleanup) {
             this.dragScrollCleanup();
+        }
+        if (this.entryAnimations) {
+            this.entryAnimations.destroy();
+        }
+        if (this.blogProgressCleanup) {
+            this.blogProgressCleanup();
         }
         document.removeEventListener('mousemove', this.onMinimapDrag);
         document.removeEventListener('mouseup', this.stopMinimapDrag);
