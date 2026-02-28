@@ -2,46 +2,380 @@
 
 /* 卡片基础样式在 components/cards.css 中定义 */
 
-/* === 图片预览 === */
-.image-preview {
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 400px;
-    max-width: 90vw;
-    background: var(--card-bg);
-    border-radius: 12px;
-    padding: 8px;
-    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.2);
-    z-index: 1001;
-    pointer-events: none;
-    opacity: 0;
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.image-preview.preview-above {
-    bottom: calc(100% + 40px);
-}
-
-.event-card:hover ~ .image-preview.preview-above {
-    opacity: 1;
-    bottom: calc(100% + 20px);
-}
-
-.image-preview.preview-below {
-    top: calc(100% + 40px);
-}
-
-.event-card:hover ~ .image-preview.preview-below {
-    opacity: 1;
-    top: calc(100% + 20px);
-}
-
-.image-preview img {
+/* === 图片灯箱弹窗 === */
+.image-lightbox {
+    position: fixed;
+    top: 0;
+    left: 0;
     width: 100%;
-    height: auto;
-    display: block;
-    border-radius: 8px;
-    max-height: 500px;
-    object-fit: cover;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(12px) saturate(0.5);
+    -webkit-backdrop-filter: blur(12px) saturate(0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    cursor: zoom-out;
+}
+
+.image-lightbox.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.image-lightbox-content {
+    position: relative;
+    max-width: 90vw;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transform: scale(0.85) translateY(10px);
+    transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), max-width 0.35s ease;
+    cursor: default;
+}
+
+/* 侧边栏展开时，图片区域向左让位 */
+.image-lightbox.has-sidebar .image-lightbox-content {
+    max-width: calc(100vw - 380px);
+    margin-right: 360px;
+}
+
+.image-lightbox.active .image-lightbox-content {
+    transform: scale(1) translateY(0);
+}
+
+.image-lightbox-close {
+    position: absolute;
+    top: -40px;
+    right: -4px;
+    background: rgba(255, 255, 255, 0.15);
+    border: none;
+    color: white;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    z-index: 10;
+    backdrop-filter: blur(8px);
+}
+
+.image-lightbox-close:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: scale(1.1);
+}
+
+.image-lightbox-img {
+    max-width: 90vw;
+    max-height: 78vh;
+    object-fit: contain;
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+    user-select: none;
+    transition: max-width 0.35s ease;
+}
+
+.image-lightbox.has-sidebar .image-lightbox-img {
+    max-width: calc(100vw - 400px);
+}
+
+.image-lightbox-caption {
+    margin-top: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    animation: fadeIn 0.4s ease 0.2s both;
+}
+
+.image-lightbox-caption .caption-title {
+    color: rgba(255, 255, 255, 0.95);
+    font-size: 16px;
+    font-weight: 600;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.image-lightbox-caption .caption-date {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 13px;
+    font-weight: 400;
+}
+
+/* === EXIF 右侧边栏 === */
+.exif-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 340px;
+    height: 100vh;
+    background: rgba(12, 12, 14, 0.82);
+    backdrop-filter: blur(24px) saturate(1.3);
+    -webkit-backdrop-filter: blur(24px) saturate(1.3);
+    color: rgba(255, 255, 255, 0.92);
+    z-index: 10001;
+    border-left: 1px solid rgba(255, 255, 255, 0.06);
+    box-shadow: -8px 0 40px rgba(0, 0, 0, 0.35);
+    cursor: default;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* 侧边栏滑入/滑出动画 */
+.sidebar-enter-active {
+    transition: transform 0.38s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.28s ease;
+}
+.sidebar-leave-active {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 1, 1), opacity 0.22s ease;
+}
+.sidebar-enter-from, .sidebar-leave-to {
+    transform: translateX(100%);
+    opacity: 0;
+}
+
+/* 滚动区域 */
+.exif-scroll {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 28px 24px 24px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.12) transparent;
+}
+
+.exif-scroll::-webkit-scrollbar {
+    width: 4px;
+}
+
+.exif-scroll::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 2px;
+}
+
+/* 侧边栏标题区 */
+.exif-sidebar-title {
+    margin-bottom: 24px;
+}
+
+.exif-sidebar-title h3 {
+    font-size: 17px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.95);
+    margin: 0 0 4px;
+    line-height: 1.4;
+    word-break: break-word;
+}
+
+.exif-sidebar-title .exif-sidebar-date {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.4);
+    font-weight: 400;
+}
+
+/* 分区标题 */
+.exif-section {
+    margin-bottom: 22px;
+}
+
+.exif-section-header {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.8px;
+    color: rgba(255, 255, 255, 0.38);
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.exif-section-header svg {
+    opacity: 0.45;
+}
+
+/* EXIF条目 */
+.exif-items {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.exif-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 16px;
+    font-size: 13px;
+    line-height: 1.65;
+}
+
+.exif-label {
+    color: rgba(255, 255, 255, 0.42);
+    font-weight: 500;
+    flex-shrink: 0;
+    font-size: 13px;
+}
+
+.exif-value {
+    color: rgba(255, 255, 255, 0.92);
+    font-weight: 500;
+    text-align: right;
+    font-family: 'SF Mono', 'Consolas', 'Monaco', monospace;
+    font-size: 13px;
+    word-break: break-word;
+}
+
+/* 参数网格（光圈/快门/ISO等） */
+.exif-params-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    margin-top: 2px;
+}
+
+.exif-param-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px 4px;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    transition: background 0.2s ease;
+}
+
+.exif-param-block:hover {
+    background: rgba(255, 255, 255, 0.07);
+}
+
+.exif-param-val {
+    font-family: 'SF Mono', 'Consolas', 'Monaco', monospace;
+    font-size: 15px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.92);
+    line-height: 1.3;
+}
+
+.exif-param-label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: rgba(255, 255, 255, 0.32);
+    margin-top: 3px;
+}
+
+/* === 地点信息 === */
+.exif-location-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.8);
+    font-weight: 500;
+    margin-bottom: 2px;
+}
+
+.exif-location-header svg {
+    opacity: 0.55;
+    flex-shrink: 0;
+}
+
+.exif-coords {
+    font-family: 'SF Mono', 'Consolas', 'Monaco', monospace;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.45);
+}
+
+/* === 内嵌地图 === */
+.exif-map-container {
+    width: 100%;
+    height: 160px;
+    border-radius: 10px;
+    margin-top: 10px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.exif-map-marker {
+    width: 12px;
+    height: 12px;
+    background: var(--accent, #ff6b6b);
+    border: 2px solid rgba(255, 255, 255, 0.9);
+    border-radius: 50%;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+/* 补充信息区 */
+.exif-extra {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* === 响应式 === */
+@media (max-width: 768px) {
+    .image-lightbox-content {
+        max-width: 95vw;
+    }
+    
+    .image-lightbox-img {
+        max-width: 95vw;
+        max-height: 75vh;
+        border-radius: 8px;
+    }
+    
+    .image-lightbox-close {
+        top: -36px;
+        right: 0;
+    }
+
+    /* 移动端：侧边栏变为底部抽屉 */
+    .image-lightbox.has-sidebar .image-lightbox-content {
+        max-width: 95vw;
+        margin-right: 0;
+    }
+    
+    .image-lightbox.has-sidebar .image-lightbox-img {
+        max-width: 95vw;
+    }
+    
+    .exif-panel {
+        top: auto;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: auto;
+        max-height: 55vh;
+        border-left: none;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 18px 18px 0 0;
+        box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.4);
+    }
+    
+    .sidebar-enter-from, .sidebar-leave-to {
+        transform: translateY(100%);
+    }
+
+    .exif-scroll {
+        padding: 20px 18px;
+    }
+    
+    .exif-params-grid {
+        grid-template-columns: 1fr 1fr 1fr;
+    }
+    
+    .exif-map-container {
+        height: 130px;
+    }
 }

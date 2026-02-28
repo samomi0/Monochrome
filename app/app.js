@@ -76,6 +76,15 @@ createApp({
                 content: '',
                 renderedContent: ''
             },
+            // 图片灯箱状态
+            currentImage: {
+                visible: false,
+                src: '',
+                title: '',
+                date: '',
+                location: '',
+                exif: null
+            },
             // 后端配置
             backendConfig: {
                 enabled: false,
@@ -690,6 +699,178 @@ createApp({
             }
             return '加载中...';
         },
+        // 统一卡片点击入口
+        openCardContent(event) {
+            if (this.isBlogEvent(event)) {
+                this.openBlog(event);
+            } else if (event.image) {
+                this.openImage(event);
+            }
+        },
+        // 图片灯箱
+        openImage(event) {
+            this.currentImage.src = event.image;
+            this.currentImage.title = event.title || '';
+            this.currentImage.date = event.date || '';
+            this.currentImage.location = event.location || '';
+            this.currentImage.exif = null;
+            this.currentImage.visible = true;
+        },
+        closeImage() {
+            this.currentImage.visible = false;
+            // 清理地图
+            if (this._exifMap) {
+                this._exifMap.remove();
+                this._exifMap = null;
+            }
+            setTimeout(() => {
+                if (!this.currentImage.visible) {
+                    this.currentImage.src = '';
+                    this.currentImage.title = '';
+                    this.currentImage.date = '';
+                    this.currentImage.location = '';
+                    this.currentImage.exif = null;
+                }
+            }, 300);
+        },
+        // EXIF数据加载
+        loadExifData() {
+            const img = this.$refs.lightboxImg;
+            if (!img || typeof EXIF === 'undefined') return;
+            
+            EXIF.getData(img, () => {
+                const make = EXIF.getTag(img, 'Make') || '';
+                const model = EXIF.getTag(img, 'Model') || '';
+                const lens = EXIF.getTag(img, 'LensModel') || EXIF.getTag(img, 'Lens') || '';
+                const focalLength = EXIF.getTag(img, 'FocalLength');
+                const fNumber = EXIF.getTag(img, 'FNumber');
+                const exposureTime = EXIF.getTag(img, 'ExposureTime');
+                const iso = EXIF.getTag(img, 'ISOSpeedRatings');
+                const datetime = EXIF.getTag(img, 'DateTimeOriginal') || EXIF.getTag(img, 'DateTime') || '';
+                const width = EXIF.getTag(img, 'PixelXDimension') || EXIF.getTag(img, 'ImageWidth');
+                const height = EXIF.getTag(img, 'PixelYDimension') || EXIF.getTag(img, 'ImageHeight');
+                const exposureComp = EXIF.getTag(img, 'ExposureBias') || EXIF.getTag(img, 'ExposureCompensation');
+                const meteringMode = EXIF.getTag(img, 'MeteringMode');
+                const colorSpace = EXIF.getTag(img, 'ColorSpace');
+                const whiteBalance = EXIF.getTag(img, 'WhiteBalance');
+                const flash = EXIF.getTag(img, 'Flash');
+                
+                // GPS数据
+                const gpsLat = EXIF.getTag(img, 'GPSLatitude');
+                const gpsLatRef = EXIF.getTag(img, 'GPSLatitudeRef');
+                const gpsLng = EXIF.getTag(img, 'GPSLongitude');
+                const gpsLngRef = EXIF.getTag(img, 'GPSLongitudeRef');
+                
+                // 整理相机名称
+                let camera = '';
+                if (model) {
+                    camera = model.startsWith(make) ? model : (make ? `${make} ${model}` : model);
+                } else if (make) {
+                    camera = make;
+                }
+                
+                // 测光模式映射
+                const meteringMap = { 0:'未知', 1:'平均', 2:'中央重点', 3:'点测光', 4:'多点', 5:'评价', 6:'局部', 255:'其他' };
+                // 白平衡映射
+                const wbMap = { 0:'自动', 1:'手动' };
+                // 闪光灯映射
+                const flashMap = (v) => {
+                    if (v === undefined || v === null) return '';
+                    return (v & 1) ? '已闪光' : '未闪光';
+                };
+                
+                const exif = {};
+                if (camera) exif.camera = camera.trim();
+                if (lens) exif.lens = lens.trim();
+                if (focalLength) exif.focalLength = `${focalLength.numerator / focalLength.denominator}mm`;
+                if (fNumber) exif.aperture = `f/${(fNumber.numerator / fNumber.denominator).toFixed(1)}`;
+                if (exposureTime) {
+                    const val = exposureTime.numerator / exposureTime.denominator;
+                    exif.shutter = val >= 1 ? `${val}s` : `1/${Math.round(1 / val)}s`;
+                }
+                if (iso) exif.iso = `${Array.isArray(iso) ? iso[0] : iso}`;
+                if (exposureComp !== undefined && exposureComp !== null) {
+                    const evVal = typeof exposureComp === 'object' ? exposureComp.numerator / exposureComp.denominator : exposureComp;
+                    exif.ev = evVal >= 0 ? `+${evVal.toFixed(1)}` : evVal.toFixed(1);
+                }
+                if (meteringMode !== undefined && meteringMode !== null) {
+                    exif.meteringMode = meteringMap[meteringMode] || `${meteringMode}`;
+                }
+                if (width && height) exif.resolution = `${width} \u00d7 ${height}`;
+                if (colorSpace !== undefined) {
+                    exif.colorSpace = colorSpace === 1 ? 'sRGB' : (colorSpace === 65535 ? 'Uncalibrated' : `${colorSpace}`);
+                }
+                if (whiteBalance !== undefined && whiteBalance !== null) {
+                    exif.whiteBalance = wbMap[whiteBalance] || `${whiteBalance}`;
+                }
+                const flashStr = flashMap(flash);
+                if (flashStr) exif.flash = flashStr;
+                if (datetime) {
+                    exif.datetime = datetime.replace(/^(\d{4}):(\d{2}):(\d{2})/, '$1-$2-$3');
+                }
+                
+                // 解析GPS坐标
+                if (gpsLat && gpsLng && gpsLatRef && gpsLngRef) {
+                    const toDecimal = (dms, ref) => {
+                        const d = dms[0].numerator / dms[0].denominator;
+                        const m = dms[1].numerator / dms[1].denominator;
+                        const s = dms[2].numerator / dms[2].denominator;
+                        let dec = d + m / 60 + s / 3600;
+                        if (ref === 'S' || ref === 'W') dec = -dec;
+                        return dec;
+                    };
+                    exif.gps = {
+                        lat: toDecimal(gpsLat, gpsLatRef),
+                        lng: toDecimal(gpsLng, gpsLngRef)
+                    };
+                }
+                
+                if (Object.keys(exif).length > 0) {
+                    this.currentImage.exif = exif;
+                    // 如果有GPS数据，初始化地图
+                    if (exif.gps) {
+                        this.$nextTick(() => {
+                            this.initExifMap(exif.gps.lat, exif.gps.lng);
+                        });
+                    }
+                }
+            });
+        },
+        // 初始化EXIF地图
+        initExifMap(lat, lng) {
+            if (typeof L === 'undefined') return;
+            const container = this.$refs.exifMapContainer;
+            if (!container) return;
+            
+            // 清理旧地图
+            if (this._exifMap) {
+                this._exifMap.remove();
+                this._exifMap = null;
+            }
+            
+            const map = L.map(container, {
+                zoomControl: false,
+                attributionControl: false,
+                dragging: false,
+                scrollWheelZoom: false,
+                doubleClickZoom: false,
+                touchZoom: false
+            }).setView([lat, lng], 13);
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 18
+            }).addTo(map);
+            
+            // 添加标记点
+            const icon = L.divIcon({
+                className: 'exif-map-marker',
+                iconSize: [12, 12],
+                iconAnchor: [6, 6]
+            });
+            L.marker([lat, lng], { icon }).addTo(map);
+            
+            this._exifMap = map;
+        },
         async openBlog(event) {
             if (!this.isBlogEvent(event)) return;
             
@@ -813,10 +994,31 @@ createApp({
             }
         };
         document.addEventListener('click', this.globalClickListener);
+        
+        // Escape键关闭弹窗
+        this.escapeListener = (e) => {
+            if (e.key === 'Escape') {
+                if (this.currentImage.visible) {
+                    this.closeImage();
+                } else if (this.currentBlog.visible) {
+                    this.closeBlog();
+                } else if (this.showAddEventPanel) {
+                    this.showAddEventPanel = false;
+                } else if (this.showAnalysisPanel) {
+                    this.showAnalysisPanel = false;
+                } else if (this.showFilterPanel || this.showZoomPanel) {
+                    this.closeAllPanels();
+                }
+            }
+        };
+        document.addEventListener('keydown', this.escapeListener);
     },
     beforeUnmount() {
         if (this.globalClickListener) {
             document.removeEventListener('click', this.globalClickListener);
+        }
+        if (this.escapeListener) {
+            document.removeEventListener('keydown', this.escapeListener);
         }
         if (this.wheelListener && this.$refs.timelineContainer) {
             this.$refs.timelineContainer.removeEventListener('wheel', this.wheelListener);

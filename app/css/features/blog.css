@@ -19,6 +19,8 @@
     z-index: 2;
     max-height: 120px;
     overflow: hidden;
+    mask-image: linear-gradient(to bottom, #000 60%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, #000 60%, transparent 100%);
 }
 
 /* === Blog卡片footer === */

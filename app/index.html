@@ -8,6 +8,9 @@
     <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/exif-js@2.3.0/exif.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.min.js"></script>
 </head>
 <body>
     <div id="app">
@@ -57,7 +60,7 @@
 
         <!-- 缩放控制面板 -->
         <transition name="panel">
-            <div v-if="showZoomPanel" class="control-panel zoom-panel" @click.stop>
+            <div v-if="showZoomPanel" class="control-panel zoom-panel" @click.stop @contextmenu.prevent="showZoomPanel = false">
                 <h3>缩放控制</h3>
                 <div class="zoom-slider">
                     <button @click="zoomOut" class="icon-btn">−</button>
@@ -71,7 +74,7 @@
 
         <!-- 标签筛选面板 -->
         <transition name="panel">
-            <div v-if="showFilterPanel" class="control-panel filter-panel" @click.stop>
+            <div v-if="showFilterPanel" class="control-panel filter-panel" @click.stop @contextmenu.prevent="showFilterPanel = false">
                 <h3>筛选设置</h3>
                 
                 <!-- 筛选说明 -->
@@ -161,7 +164,7 @@
 
         <!-- 新增事件面板 -->
         <transition name="panel">
-            <div v-if="showAddEventPanel" class="add-event-modal" @click.stop>
+            <div v-if="showAddEventPanel" class="add-event-modal" @click.stop @contextmenu.prevent="showAddEventPanel = false">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h3>新增事件</h3>
@@ -277,7 +280,7 @@
 
         <!-- 数据分析面板 -->
         <transition name="panel">
-            <div v-if="showAnalysisPanel" class="analysis-modal" @click.stop>
+            <div v-if="showAnalysisPanel" class="analysis-modal" @click.stop @contextmenu.prevent="showAnalysisPanel = false">
                 <div class="modal-content analysis-content">
                     <div class="modal-header analysis-header">
                         <button class="close-btn" @click="showAnalysisPanel = false">×</button>
@@ -499,7 +502,13 @@
                     :style="{ left: getEventPosition(event.date) + 'px' }"
                 >
                     <div class="event-dot" :class="{ 'today-dot': isToday(event.date) }"></div>
-                    <div class="event-card" :class="{ 'blog-card': isBlogEvent(event) }">
+                    <div class="event-card" 
+                        :class="{ 
+                            'blog-card': isBlogEvent(event),
+                            'clickable-card': isBlogEvent(event) || event.image 
+                        }"
+                        @click="openCardContent(event)"
+                    >
                         <!-- Blog标记 -->
                         <div v-if="isBlogEvent(event)" class="blog-badge" :class="{ 'has-image-badge': event.image }">
                             <svg viewBox="0 0 24 24" width="16" height="16">
@@ -556,20 +565,20 @@
                                     {{ event.note }}
                                 </span>
                             </div>
-                            <!-- Blog阅读全文按钮 -->
-                            <button v-if="isBlogEvent(event)" class="read-more-btn" @click="openBlog(event)">
-                                <svg viewBox="0 0 24 24" width="16" height="16">
-                                    <path fill="currentColor" d="M14,3V5H17.59L7.76,14.83L9.17,16.24L19,6.41V10H21V3M19,19H5V5H12V3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V12H19V19Z"/>
-                                </svg>
-                                阅读全文
-                            </button>
+                        </div>
+                        <!-- 可点击提示指示器 -->
+                        <div v-if="isBlogEvent(event) || event.image" class="card-click-hint">
+                            <svg v-if="isBlogEvent(event)" viewBox="0 0 24 24" width="14" height="14">
+                                <path fill="currentColor" d="M19,2L14,6.5V17.5L19,13V2M6.5,5C4.55,5 2.45,5.4 1,6.5V21.16C1,21.41 1.25,21.66 1.5,21.66C1.6,21.66 1.65,21.59 1.75,21.59C3.1,20.94 5.05,20.5 6.5,20.5C8.45,20.5 10.55,20.9 12,22C13.35,21.15 15.8,20.5 17.5,20.5C19.15,20.5 20.85,20.81 22.25,21.56C22.35,21.61 22.4,21.59 22.5,21.59C22.75,21.59 23,21.34 23,21.09V6.5C22.4,6.05 21.75,5.75 21,5.5V19C19.9,18.65 18.7,18.5 17.5,18.5C15.8,18.5 13.35,19.15 12,20V6.5C10.55,5.4 8.45,5 6.5,5Z"/>
+                            </svg>
+                            <svg v-else viewBox="0 0 24 24" width="14" height="14">
+                                <path fill="currentColor" d="M8.5,13.5L11,16.5L14.5,12L19,18H5M21,19V5C21,3.89 20.1,3 19,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19Z"/>
+                            </svg>
+                            <span>{{ isBlogEvent(event) ? '点击阅读' : '点击查看' }}</span>
                         </div>
                     </div>
                     
-                    <!-- 图片预览（移到卡片外部） - 上方卡片图片在下，下方卡片图片在上 -->
-                    <div v-if="event.image" class="image-preview" :class="{ 'preview-below': getOriginalIndex(event) % 2 === 0, 'preview-above': getOriginalIndex(event) % 2 !== 0 }">
-                        <img :src="event.image" :alt="event.title" @error="handleImageError">
-                    </div>
+
                 </div>
             </div>
         </div>
@@ -598,8 +607,139 @@
             </div>
         </div>
         
+        <!-- 图片灯箱弹窗 -->
+        <div class="image-lightbox" :class="{ active: currentImage.visible, 'has-sidebar': currentImage.exif && Object.keys(currentImage.exif).length > 0 }" @click.self="closeImage" @contextmenu.prevent="closeImage">
+            <div class="image-lightbox-content">
+                <button class="image-lightbox-close" @click="closeImage">
+                    <svg viewBox="0 0 24 24" width="22" height="22">
+                        <path fill="currentColor" d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/>
+                    </svg>
+                </button>
+                <img v-if="currentImage.src" :src="currentImage.src" :alt="currentImage.title" class="image-lightbox-img" ref="lightboxImg" @load="loadExifData">
+                <div v-if="currentImage.title" class="image-lightbox-caption">
+                    <span class="caption-title">{{ currentImage.title }}</span>
+                    <span v-if="currentImage.date" class="caption-date">{{ formatDate(currentImage.date) }}</span>
+                </div>
+            </div>
+            <!-- EXIF 右侧边栏 -->
+            <transition name="sidebar">
+                <div v-if="currentImage.visible && currentImage.exif && Object.keys(currentImage.exif).length > 0" class="exif-panel" @click.stop>
+                    <div class="exif-scroll">
+                        <!-- 标题区 -->
+                        <div v-if="currentImage.title || currentImage.date" class="exif-sidebar-title">
+                            <h3 v-if="currentImage.title">{{ currentImage.title }}</h3>
+                            <span v-if="currentImage.date" class="exif-sidebar-date">{{ formatDate(currentImage.date) }}</span>
+                        </div>
+
+                        <!-- 设备信息 -->
+                        <div v-if="currentImage.exif.camera || currentImage.exif.lens" class="exif-section">
+                            <div class="exif-section-header">
+                                <svg viewBox="0 0 24 24" width="14" height="14">
+                                    <path fill="currentColor" d="M4,4H7L9,2H15L17,4H20A2,2 0 0,1 22,6V18A2,2 0 0,1 20,20H4A2,2 0 0,1 2,18V6A2,2 0 0,1 4,4M12,7A5,5 0 0,0 7,12A5,5 0 0,0 12,17A5,5 0 0,0 17,12A5,5 0 0,0 12,7M12,9A3,3 0 0,1 15,12A3,3 0 0,1 12,15A3,3 0 0,1 9,12A3,3 0 0,1 12,9Z"/>
+                                </svg>
+                                <span>设备</span>
+                            </div>
+                            <div class="exif-items">
+                                <div v-if="currentImage.exif.camera" class="exif-item">
+                                    <span class="exif-label">相机</span>
+                                    <span class="exif-value">{{ currentImage.exif.camera }}</span>
+                                </div>
+                                <div v-if="currentImage.exif.lens" class="exif-item">
+                                    <span class="exif-label">镜头</span>
+                                    <span class="exif-value">{{ currentImage.exif.lens }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 拍摄参数（网格卡片） -->
+                        <div v-if="currentImage.exif.aperture || currentImage.exif.shutter || currentImage.exif.iso || currentImage.exif.focalLength" class="exif-section">
+                            <div class="exif-section-header">
+                                <svg viewBox="0 0 24 24" width="14" height="14">
+                                    <path fill="currentColor" d="M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.34 19.43,11L21.54,9.37C21.73,9.22 21.78,8.95 21.66,8.73L19.66,5.27C19.54,5.05 19.27,4.96 19.05,5.05L16.56,6.05C16.04,5.66 15.5,5.32 14.87,5.07L14.5,2.42C14.46,2.18 14.25,2 14,2H10C9.75,2 9.54,2.18 9.5,2.42L9.13,5.07C8.5,5.32 7.96,5.66 7.44,6.05L4.95,5.05C4.73,4.96 4.46,5.05 4.34,5.27L2.34,8.73C2.21,8.95 2.27,9.22 2.46,9.37L4.57,11C4.53,11.34 4.5,11.67 4.5,12C4.5,12.33 4.53,12.65 4.57,12.97L2.46,14.63C2.27,14.78 2.21,15.05 2.34,15.27L4.34,18.73C4.46,18.95 4.73,19.04 4.95,18.95L7.44,17.94C7.96,18.34 8.5,18.68 9.13,18.93L9.5,21.58C9.54,21.82 9.75,22 10,22H14C14.25,22 14.46,21.82 14.5,21.58L14.87,18.93C15.5,18.67 16.04,18.34 16.56,17.94L19.05,18.95C19.27,19.04 19.54,18.95 19.66,18.73L21.66,15.27C21.78,15.05 21.73,14.78 21.54,14.63L19.43,12.97Z"/>
+                                </svg>
+                                <span>参数</span>
+                            </div>
+                            <div class="exif-params-grid">
+                                <div v-if="currentImage.exif.aperture" class="exif-param-block">
+                                    <span class="exif-param-val">{{ currentImage.exif.aperture }}</span>
+                                    <span class="exif-param-label">光圈</span>
+                                </div>
+                                <div v-if="currentImage.exif.shutter" class="exif-param-block">
+                                    <span class="exif-param-val">{{ currentImage.exif.shutter }}</span>
+                                    <span class="exif-param-label">快门</span>
+                                </div>
+                                <div v-if="currentImage.exif.iso" class="exif-param-block">
+                                    <span class="exif-param-val">{{ currentImage.exif.iso }}</span>
+                                    <span class="exif-param-label">ISO</span>
+                                </div>
+                                <div v-if="currentImage.exif.focalLength" class="exif-param-block">
+                                    <span class="exif-param-val">{{ currentImage.exif.focalLength }}</span>
+                                    <span class="exif-param-label">焦距</span>
+                                </div>
+                                <div v-if="currentImage.exif.ev" class="exif-param-block">
+                                    <span class="exif-param-val">{{ currentImage.exif.ev }}</span>
+                                    <span class="exif-param-label">曝光补偿</span>
+                                </div>
+                                <div v-if="currentImage.exif.meteringMode" class="exif-param-block">
+                                    <span class="exif-param-val">{{ currentImage.exif.meteringMode }}</span>
+                                    <span class="exif-param-label">测光</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 图像信息 -->
+                        <div v-if="currentImage.exif.resolution || currentImage.exif.datetime || currentImage.exif.colorSpace || currentImage.exif.fileSize" class="exif-section">
+                            <div class="exif-section-header">
+                                <svg viewBox="0 0 24 24" width="14" height="14">
+                                    <path fill="currentColor" d="M13,9H18.5L13,3.5V9M6,2H14L20,8V20A2,2 0 0,1 18,22H6C4.89,22 4,21.1 4,20V4C4,2.89 4.89,2 6,2M6,20H15L18,20V11H11V4H6V20Z"/>
+                                </svg>
+                                <span>图像</span>
+                            </div>
+                            <div class="exif-items exif-extra">
+                                <div v-if="currentImage.exif.resolution" class="exif-item">
+                                    <span class="exif-label">分辨率</span>
+                                    <span class="exif-value">{{ currentImage.exif.resolution }}</span>
+                                </div>
+                                <div v-if="currentImage.exif.colorSpace" class="exif-item">
+                                    <span class="exif-label">色彩空间</span>
+                                    <span class="exif-value">{{ currentImage.exif.colorSpace }}</span>
+                                </div>
+                                <div v-if="currentImage.exif.whiteBalance" class="exif-item">
+                                    <span class="exif-label">白平衡</span>
+                                    <span class="exif-value">{{ currentImage.exif.whiteBalance }}</span>
+                                </div>
+                                <div v-if="currentImage.exif.flash" class="exif-item">
+                                    <span class="exif-label">闪光灯</span>
+                                    <span class="exif-value">{{ currentImage.exif.flash }}</span>
+                                </div>
+                                <div v-if="currentImage.exif.datetime" class="exif-item">
+                                    <span class="exif-label">拍摄时间</span>
+                                    <span class="exif-value">{{ currentImage.exif.datetime }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 地点信息 -->
+                        <div v-if="currentImage.location || (currentImage.exif && currentImage.exif.gps)" class="exif-section">
+                            <div class="exif-section-header">
+                                <svg viewBox="0 0 24 24" width="14" height="14">
+                                    <path fill="currentColor" d="M12,11.5A2.5,2.5 0 0,1 9.5,9A2.5,2.5 0 0,1 12,6.5A2.5,2.5 0 0,1 14.5,9A2.5,2.5 0 0,1 12,11.5M12,2A7,7 0 0,0 5,9C5,14.25 12,22 12,22C12,22 19,14.25 19,9A7,7 0 0,0 12,2Z"/>
+                                </svg>
+                                <span>地点</span>
+                            </div>
+                            <div class="exif-location-header">
+                                <span v-if="currentImage.location">{{ currentImage.location }}</span>
+                                <span v-else-if="currentImage.exif.gps" class="exif-coords">{{ currentImage.exif.gps.lat.toFixed(6) }}, {{ currentImage.exif.gps.lng.toFixed(6) }}</span>
+                            </div>
+                            <div v-if="currentImage.exif.gps" class="exif-map-container" ref="exifMapContainer"></div>
+                        </div>
+                    </div>
+                </div>
+            </transition>
+        </div>
+
         <!-- Blog模态弹窗 -->
-        <div class="blog-modal" :class="{ active: currentBlog.visible }" @click.self="closeBlog">
+        <div class="blog-modal" :class="{ active: currentBlog.visible }" @click.self="closeBlog" @contextmenu.prevent="closeBlog">
             <div class="blog-modal-content">
                 <div class="blog-modal-header" :style="{ background: currentBlog.event ? getTagGradient(currentBlog.event.tags) : 'linear-gradient(in oklch 135deg, var(--accent), var(--secondary))' }">
                     <div class="blog-modal-meta">

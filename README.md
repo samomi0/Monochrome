@@ -6,7 +6,7 @@
 
 至于名字，来自Geebar《褪色的佛》的歌词 —— “直到故事都变成灰照片”。
 
-*Powered By Claude Sonnet 4.5*
+*Powered By Claude*
 
 ## 使用
 

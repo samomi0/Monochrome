@@ -51,6 +51,18 @@ body.dark-mode .blog-modal {
     background: rgba(0, 0, 0, 0.6);
 }
 
+/* 暗色模式下可点击卡片提示 */
+body.dark-mode .card-click-hint {
+    color: var(--text-light);
+    background: var(--footer-bg);
+    border-top-color: rgba(255, 255, 255, 0.06);
+}
+
+/* 暗色模式下图片灯箱 */
+body.dark-mode .image-lightbox {
+    background: rgba(0, 0, 0, 0.75);
+}
+
 /* === 数据分析面板 === */
 .dark-mode .analysis-header,
 .dark-mode .analysis-body {
